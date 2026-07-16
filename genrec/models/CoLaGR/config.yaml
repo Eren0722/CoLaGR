@@ -1,0 +1,93 @@
+# CoLaGR (Collaborative Latent Grounded Recommendation) configuration.
+# This model keeps PSID labels as clean semantic IDs and adds CoReason states
+# only inside the decoder.
+
+metadata: sentence
+lr: 0.003
+weight_decay: 0.05
+
+sent_emb_model: sentence-transformers/sentence-t5-base
+sent_emb_dim: 768
+sent_emb_pca: 192
+sent_emb_batch_size: 512
+
+vq_method: opq
+faiss_omp_num_threads: 32
+vq_n_codebooks: 3
+vq_codebook_size: 256
+vq_permutation: 0
+
+rqvae_hidden_sizes: [2048,1024,512,256,128]
+rqvae_dropout: 0.0
+rqvae_lr: 0.001
+rqvae_batch_size: 2048
+rqvae_epoch: 10000
+rqvae_beta: 0.25
+rqvae_verbose: 500
+rqvae_low_usage_threshold: -1
+
+n_user_tokens: 1
+max_item_seq_len: 20
+num_beams: 50
+
+num_layers: 4
+num_decoder_layers: 4
+d_model: 128
+d_ff: 1024
+num_heads: 6
+d_kv: 64
+dropout_rate: 0.1
+activation_function: "relu"
+feed_forward_proj: "relu"
+
+# CoPref
+level_token_ids_path: null
+copref_train_path: null
+copref_val_path: null
+copref_test_path: null
+load_eval_copref_diagnostics: false
+lambda_c: 0.10
+copref_temp: 2.0
+copref_tau: 5.0
+copref_anchor: coreason
+copref_level_weights: [1.0, 1.0, 1.0]
+
+# CoReason / CoDecode
+use_coreason: true
+use_copref_loss: true
+use_cofuse: true
+fuse_gate_init: -2.0
+cofuse_gate_max: 0.3
+cofuse_gate_maxs: null
+detach_prior_in_fusion: true
+prior_temperature: 1.0
+center_prior_in_fusion: true
+gate_l2: 0.0
+use_selective_cofuse: true
+selar_topk: 5
+entropy_threshold: 0.9
+entropy_thresholds: null
+entropy_gate_temp: 0.10
+log_entropy_stats: true
+fixed_cofuse_gate: false
+use_selective_fuse_loss: false
+selective_fuse_weight: 0.05
+gen_loss_on_fused_logits: false
+detach_lm_in_fuse_loss: true
+detach_activation_in_fuse_loss: true
+
+init_checkpoint_path: null
+eval_only: false
+
+# CoRoute / Collaborative Latent Routing
+use_coroute: false
+num_coreason_routes: 4
+coroute_aggregation_method: agg_max
+coroute_decode_chunk_size: 8192
+coroute_eval_num_routes: 1
+require_coroute_init_checkpoint: false
+scheduler_total_steps: null
+
+# Generation
+use_prefix_trie: true
+valid_prefix_trie_path: null

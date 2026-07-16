@@ -1,0 +1,56 @@
+# PSID (Purely Semantic ID) Model Configuration
+# PSID uses conflict resolution to ensure all semantic IDs are unique (non-conflicting)
+# while maintaining purely semantic tokens. Unlike TIGER which adds an additional 
+# non-semantic token to resolve conflicts, PSID reassigns conflicting items to nearby
+# semantic IDs, trading some compression accuracy for conflict-free purely semantic tokens.
+
+# Overwritting configs
+metadata: sentence    # Overwrite data config file, PSID only supports 'sentence'
+lr: 0.003             # Overwrite learning rate
+weight_decay: 0.05    # Overwrite weight decay
+
+# Config for sentence embedding model
+#   Sentence T5
+sent_emb_model: sentence-transformers/sentence-t5-base
+sent_emb_dim: 768
+sent_emb_pca: 192
+#   OpenAI Embedding Model
+# sent_emb_model: text-embedding-3-large
+# sent_emb_dim: 3072
+# sent_emb_pca: 768
+# openai_api_key: ~
+sent_emb_batch_size: 512
+
+# Config for VQ (Vector Quantization)
+vq_method: opq              # Method for generating semantic IDs: 'opq', 'rqkmeans', or 'rqvae'
+faiss_omp_num_threads: 32
+vq_n_codebooks: 3
+vq_codebook_size: 256
+vq_permutation: 0         # Permutation index for semantic IDs (0-5 for 3 digits, 0 means no permutation)
+
+# Config for RQ-VAE (used when vq_method='rqvae')
+# RQ-VAE trains a neural network encoder-decoder with residual quantization
+rqvae_hidden_sizes: [2048,1024,512,256,128]
+rqvae_dropout: 0.0
+rqvae_lr: 0.001
+rqvae_batch_size: 2048
+rqvae_epoch: 10000
+rqvae_beta: 0.25          # Weight for quantization loss
+rqvae_verbose: 500        # Print training progress every N epochs
+rqvae_low_usage_threshold: -1  # Reassignment trigger threshold, -1 means no reassignment
+
+# Config for PSID model
+n_user_tokens: 1      # Number of user tokens hashed from user ids
+max_item_seq_len: 20  # Maximum #items in a sequence
+num_beams: 50         # Number of beams for beam search
+
+# Config for T5
+num_layers: 4
+num_decoder_layers: 4
+d_model: 128
+d_ff: 1024
+num_heads: 6
+d_kv: 64
+dropout_rate: 0.1
+activation_function: "relu"
+feed_forward_proj: "relu"

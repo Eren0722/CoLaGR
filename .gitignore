@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Local data and generated artifacts
+cache/
+artifacts/
+ckpt/
+checkpoints/
+logs/
+tensorboard/
+wandb/
+*.pth
+*.pt
+*.safetensors
+*.bin
+*.pkl
+*.pickle
+
+# Local tools and editor files
+.env
+.env.*
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
