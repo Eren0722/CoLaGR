@@ -1,0 +1,221 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{lin2025survey}
+\citation{zhao2024era}
+\citation{kim2025lost}
+\citation{wang2026contextbias}
+\citation{bao2023tallrec}
+\citation{yu2026thinkrec}
+\citation{liao2024llara}
+\citation{kim2024allmrec}
+\citation{zhang2025collm}
+\citation{zheng2024lcrec}
+\citation{hong2025eagerllm}
+\citation{kim2025lost}
+\citation{ren2024rlmrec}
+\citation{yang2024lrd}
+\citation{liu2024llmesr}
+\citation{cui2025sracl}
+\citation{lin2026tca4rec}
+\citation{lu2025cllmrec}
+\citation{xu2024cmclrec}
+\citation{kim2025lost}
+\citation{wang2026contextbias}
+\citation{yu2026thinkrec}
+\citation{zhang2026crossscale}
+\citation{lv2025lsc4rec}
+\@writefile{toc}{\contentsline {section}{\numberline {1}引言}{1}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{1}{1}{引言}{section.1}{}}
+\citation{hidasi2016gru4rec}
+\citation{kang2018sasrec}
+\citation{sun2019bert4rec}
+\citation{kim2025lost}
+\@writefile{toc}{\contentsline {section}{\numberline {2}预备知识}{2}{section.2}\protected@file@percent }
+\newlabel{sec:preliminary}{{2}{2}{预备知识}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}LLM4Rec 设定}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}语义-序列异构鸿沟（SSHG）}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}方法}{2}{section.3}\protected@file@percent }
+\newlabel{sec:method}{{3}{2}{方法}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}整体概览}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces EchoRec 的总体架构。冻结 LLM 首先构建离线语义资产与语义邻域索引，并据此在阶段一通过语义对齐对比预训练（SACP）重塑教师协同空间；随后，增强教师输出提纯后的序列嵌入，在阶段二通过序列注入（SI）把投影后的协同物品嵌入注入冻结 LLM，并与教师侧用户表示进行对齐。}}{3}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:echorec_architecture}{{1}{3}{EchoRec 的总体架构。冻结 LLM 首先构建离线语义资产与语义邻域索引，并据此在阶段一通过语义对齐对比预训练（SACP）重塑教师协同空间；随后，增强教师输出提纯后的序列嵌入，在阶段二通过序列注入（SI）把投影后的协同物品嵌入注入冻结 LLM，并与教师侧用户表示进行对齐。}{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}语义资产准备}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}阶段一：语义对齐对比预训练（SACP）}{3}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}序列表征与推荐目标}{3}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Item-level 语义扰动一致性}{4}{subsubsection.3.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}User-level 语义邻域聚合}{4}{subsubsection.3.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.4}阶段一总体目标}{4}{subsubsection.3.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}阶段二：结构感知的序列注入}{4}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.1}教师信号提取与 prompt 构造}{5}{subsubsection.3.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.2}向量替换与 LLM 表示读取}{5}{subsubsection.3.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.3}排序损失与教师匹配损失}{5}{subsubsection.3.4.3}\protected@file@percent }
+\newlabel{eq:stage2_score}{{13}{5}{排序损失与教师匹配损失}{equation.13}{}}
+\newlabel{eq:stage2_match}{{15}{5}{排序损失与教师匹配损失}{equation.15}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.4}阶段二总体目标}{5}{subsubsection.3.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}跨空间迁移的分布视角}{5}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:theory}{{3.5}{5}{跨空间迁移的分布视角}{subsection.3.5}{}}
+\citation{kim2025lost}
+\citation{kim2025lost}
+\citation{kim2025lost}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}训练流程与设计动机}{6}{subsection.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}实验}{6}{section.4}\protected@file@percent }
+\newlabel{sec:experiment}{{4}{6}{实验}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}实验设置}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}RQ1：共享 benchmark 上的整体性能}{6}{subsection.4.2}\protected@file@percent }
+\newlabel{subsec:rq1}{{4.2}{6}{RQ1：共享 benchmark 上的整体性能}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}RQ2：消融实验}{6}{subsection.4.3}\protected@file@percent }
+\citation{rendle2010fpmc}
+\citation{hidasi2016gru4rec}
+\citation{yuan2019nextitnet}
+\citation{kang2018sasrec}
+\citation{sun2019bert4rec}
+\citation{xu2024cmclrec}
+\citation{lu2025cllmrec}
+\citation{xu2025hpserec}
+\citation{zhou2022fmlprec}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Kim 等人~\cite  {kim2025lost} 共享 benchmark 上的整体性能。我们保留 9 个可直接比较的基线，并在相同协议下加入 EchoRec。最右列报告 EchoRec 相对最强已有 LLM4Rec 基线的相对提升。每行最优结果以加粗标出。}}{7}{table.caption.3}\protected@file@percent }
+\newlabel{tab:main_overall}{{1}{7}{Kim 等人~\cite {kim2025lost} 共享 benchmark 上的整体性能。我们保留 9 个可直接比较的基线，并在相同协议下加入 EchoRec。最右列报告 EchoRec 相对最强已有 LLM4Rec 基线的相对提升。每行最优结果以加粗标出。}{table.caption.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces 四个数据集上的消融结果。每个数据集/指标中的最优结果以加粗标出，次优结果以下划线标出。}}{7}{table.caption.4}\protected@file@percent }
+\newlabel{tab:ablation_all}{{2}{7}{四个数据集上的消融结果。每个数据集/指标中的最优结果以加粗标出，次优结果以下划线标出。}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}受控 SSHG 诊断}{7}{subsection.4.4}\protected@file@percent }
+\newlabel{subsec:post-sacp}{{4.4}{7}{受控 SSHG 诊断}{subsection.4.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}RQ4：序列扰动稳定性}{7}{subsection.4.5}\protected@file@percent }
+\newlabel{subsec:seq-perturb}{{4.5}{7}{RQ4：序列扰动稳定性}{subsection.4.5}{}}
+\citation{lin2025survey}
+\citation{zhao2024era}
+\citation{bao2023tallrec}
+\citation{yu2026thinkrec}
+\citation{liao2024llara}
+\citation{zhang2025collm}
+\citation{kim2024allmrec}
+\citation{kim2025lost}
+\citation{ren2024rlmrec}
+\citation{yang2024lrd}
+\citation{liu2024llmesr}
+\citation{cui2025sracl}
+\citation{liu2025llmemb}
+\citation{lin2026tca4rec}
+\citation{zhang2026crossscale}
+\citation{lv2025lsc4rec}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces CDs 与 Scientific 上的受控 SSHG 诊断。上排对应 CDs，下排对应 Scientific；在每一排中，左图跟踪注入前语义对齐，右图跟踪注入后结构迁移。EchoRec 在不同邻域尺度上均稳定优于 Pure-SI。}}{8}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:cds_scientific_sshg_curves}{{2}{8}{CDs 与 Scientific 上的受控 SSHG 诊断。上排对应 CDs，下排对应 Scientific；在每一排中，左图跟踪注入前语义对齐，右图跟踪注入后结构迁移。EchoRec 在不同邻域尺度上均稳定优于 Pure-SI。}{figure.caption.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces CDs 与 Scientific 上的序列扰动实验结果。}}{8}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:seq_perturb_panel}{{3}{8}{CDs 与 Scientific 上的序列扰动实验结果。}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}相关工作}{8}{section.5}\protected@file@percent }
+\newlabel{sec:related}{{5}{8}{相关工作}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}序列推荐}{8}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}基于 LLM 的推荐}{8}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}结论}{8}{section.6}\protected@file@percent }
+\newlabel{sec:conclusion}{{6}{8}{结论}{section.6}{}}
+\bibcite{xu2025c2lrec}{1}
+\bibcite{xu2024cmclrec}{2}
+\bibcite{xu2025hpserec}{3}
+\bibcite{lu2025cllmrec}{4}
+\bibcite{lin2026tca4rec}{5}
+\bibcite{wang2026contextbias}{6}
+\bibcite{yu2026thinkrec}{7}
+\bibcite{zhang2026crossscale}{8}
+\bibcite{kim2025lost}{9}
+\bibcite{he2025llm2rec}{10}
+\bibcite{hong2025eagerllm}{11}
+\@writefile{toc}{\contentsline {section}{\numberline {7}未来工作}{9}{section.7}\protected@file@percent }
+\newlabel{sec:future_work}{{7}{9}{未来工作}{section.7}{}}
+\bibcite{wang2025pad}{12}
+\bibcite{cui2025sracl}{13}
+\bibcite{lv2025lsc4rec}{14}
+\bibcite{zhang2025collm}{15}
+\bibcite{lin2025survey}{16}
+\bibcite{liu2025llmemb}{17}
+\bibcite{wang2025piccdr}{18}
+\bibcite{liao2024llara}{19}
+\bibcite{kim2024allmrec}{20}
+\bibcite{ren2024rlmrec}{21}
+\bibcite{liu2024llmesr}{22}
+\bibcite{yang2024lrd}{23}
+\bibcite{zheng2024lcrec}{24}
+\bibcite{zheng2024trsr}{25}
+\bibcite{wu2024coral}{26}
+\bibcite{zhao2024era}{27}
+\bibcite{sun2019bert4rec}{28}
+\bibcite{kang2018sasrec}{29}
+\bibcite{hidasi2016gru4rec}{30}
+\bibcite{yuan2019nextitnet}{31}
+\bibcite{rendle2010fpmc}{32}
+\bibcite{chen2022iclrec}{33}
+\bibcite{zhou2022fmlprec}{34}
+\bibcite{bao2023tallrec}{35}
+\@writefile{toc}{\contentsline {section}{\numberline {A}理论分析：为什么降低 SSHG 能提升序列保持}{18}{appendix.A}\protected@file@percent }
+\newlabel{app:theory}{{A}{18}{理论分析：为什么降低 SSHG 能提升序列保持}{appendix.A}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}分布设定}{18}{subsection.A.1}\protected@file@percent }
+\newlabel{app:theory_setup}{{A.1}{18}{分布设定}{subsection.A.1}{}}
+\newlabel{eq:soft_dist}{{17}{18}{分布设定}{equation.17}{}}
+\newlabel{eq:tv_def}{{18}{19}{分布设定}{equation.18}{}}
+\newlabel{eq:ret_error}{{19}{19}{分布设定}{equation.19}{}}
+\newlabel{eq:e_align}{{20}{19}{分布设定}{equation.20}{}}
+\newlabel{eq:l_align}{{21}{19}{分布设定}{equation.21}{}}
+\newlabel{eq:e_vs_l_align}{{22}{19}{分布设定}{equation.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}结构性假设}{19}{subsection.A.2}\protected@file@percent }
+\newlabel{app:theory_assumptions}{{A.2}{19}{结构性假设}{subsection.A.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{假设 A.1（教师侧与 LLM 侧的局部决策规则）。}{19}{section*.9}\protected@file@percent }
+\newlabel{eq:two_maps}{{23}{19}{假设 A.1（教师侧与 LLM 侧的局部决策规则）。}{equation.23}{}}
+\newlabel{eq:map_outputs}{{24}{19}{假设 A.1（教师侧与 LLM 侧的局部决策规则）。}{equation.24}{}}
+\@writefile{toc}{\contentsline {paragraph}{假设 A.2（语义宿主兼容性的建模假设）。}{19}{section*.10}\protected@file@percent }
+\newlabel{eq:compat_user}{{25}{19}{假设 A.2（语义宿主兼容性的建模假设）。}{equation.25}{}}
+\newlabel{eq:compat_uniform_const}{{26}{19}{假设 A.2（语义宿主兼容性的建模假设）。}{equation.26}{}}
+\newlabel{eq:compat_uniform}{{27}{19}{假设 A.2（语义宿主兼容性的建模假设）。}{equation.27}{}}
+\@writefile{toc}{\contentsline {paragraph}{假设 A.3（注入时的 Lipschitz 稳定性）。}{20}{section*.11}\protected@file@percent }
+\newlabel{eq:lipschitz_llm}{{28}{20}{假设 A.3（注入时的 Lipschitz 稳定性）。}{equation.28}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}主定理：序列保持误差上界}{20}{subsection.A.3}\protected@file@percent }
+\newlabel{app:main_theorem}{{A.3}{20}{主定理：序列保持误差上界}{subsection.A.3}{}}
+\newlabel{thm:retention}{{A.1}{20}{序列保持误差上界}{theorem.A.1}{}}
+\newlabel{eq:user_bound}{{29}{20}{序列保持误差上界}{equation.29}{}}
+\newlabel{eq:avg_bound}{{30}{20}{序列保持误差上界}{equation.30}{}}
+\newlabel{eq:mbar}{{31}{20}{序列保持误差上界}{equation.31}{}}
+\newlabel{eq:avg_bound_lalign}{{32}{20}{序列保持误差上界}{equation.32}{}}
+\newlabel{eq:proof_start}{{33}{20}{主定理：序列保持误差上界}{equation.33}{}}
+\newlabel{eq:triangle_maps}{{34}{20}{主定理：序列保持误差上界}{equation.34}{}}
+\newlabel{eq:first_term}{{35}{20}{主定理：序列保持误差上界}{equation.35}{}}
+\newlabel{eq:second_term}{{36}{20}{主定理：序列保持误差上界}{equation.36}{}}
+\newlabel{eq:l1_bound}{{37}{20}{主定理：序列保持误差上界}{equation.37}{}}
+\citation{kim2025lost}
+\citation{hidasi2016gru4rec}
+\citation{sun2019bert4rec}
+\citation{yuan2019nextitnet}
+\citation{kang2018sasrec}
+\citation{bao2023tallrec}
+\citation{liao2024llara}
+\citation{kim2024allmrec}
+\citation{zhang2025collm}
+\citation{kim2025lost}
+\@writefile{toc}{\contentsline {paragraph}{解释。}{21}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}与主文诊断实验的关系}{21}{subsection.A.4}\protected@file@percent }
+\newlabel{app:diagnosis_relation}{{A.4}{21}{与主文诊断实验的关系}{subsection.A.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.5}讨论：与扰动稳定性的关系}{21}{subsection.A.5}\protected@file@percent }
+\newlabel{app:perturb_cor}{{A.5}{21}{讨论：与扰动稳定性的关系}{subsection.A.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}补充实验设置}{21}{appendix.B}\protected@file@percent }
+\newlabel{app:exp_settings}{{B}{21}{补充实验设置}{appendix.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}数据集}{21}{subsection.B.1}\protected@file@percent }
+\newlabel{app:datasets}{{B.1}{21}{数据集}{subsection.B.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces 共享 benchmark 协议下的数据集统计信息。}}{21}{table.caption.13}\protected@file@percent }
+\newlabel{tab:dataset_stats}{{3}{21}{共享 benchmark 协议下的数据集统计信息。}{table.caption.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}对比方法}{21}{subsection.B.2}\protected@file@percent }
+\newlabel{app:baselines}{{B.2}{21}{对比方法}{subsection.B.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces 阶段一语义资产构造所使用的紧凑版 prompt 模板。这些 prompt 仅用于构建离线语义资产与语义邻域图。}}{22}{table.caption.15}\protected@file@percent }
+\newlabel{tab:semantic_asset_prompt_template}{{4}{22}{阶段一语义资产构造所使用的紧凑版 prompt 模板。这些 prompt 仅用于构建离线语义资产与语义邻域图。}{table.caption.15}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces 阶段二序列注入所使用的紧凑版 prompt 模板。投影后的协同嵌入被插入 \texttt  {[HistoryEmb]}，最终表示从 \texttt  {[UserOut]} 与 \texttt  {[ItemOut]} 读取。}}{22}{table.caption.16}\protected@file@percent }
+\newlabel{tab:si_prompt_template}{{5}{22}{阶段二序列注入所使用的紧凑版 prompt 模板。投影后的协同嵌入被插入 \texttt {[HistoryEmb]}，最终表示从 \texttt {[UserOut]} 与 \texttt {[ItemOut]} 读取。}{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}实现细节}{22}{subsection.B.3}\protected@file@percent }
+\newlabel{app:implementation}{{B.3}{22}{实现细节}{subsection.B.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Prompt 模板。}{22}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}补充实验结果}{22}{appendix.C}\protected@file@percent }
+\newlabel{app:extra_results}{{C}{22}{补充实验结果}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}受控 SSHG 诊断}{22}{subsection.C.1}\protected@file@percent }
+\newlabel{app:prelim_extra}{{C.1}{22}{受控 SSHG 诊断}{subsection.C.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces 跨数据集的受控 SSHG 诊断。对每个指标与数据集，同时报告 Pure-SI、EchoRec 以及 EchoRec 相对 Pure-SI 的相对提升。}}{22}{table.caption.17}\protected@file@percent }
+\newlabel{tab:multidataset_sshg_delta}{{6}{22}{跨数据集的受控 SSHG 诊断。对每个指标与数据集，同时报告 Pure-SI、EchoRec 以及 EchoRec 相对 Pure-SI 的相对提升。}{table.caption.17}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {D}局限性}{23}{appendix.D}\protected@file@percent }
+\newlabel{app:limitations}{{D}{23}{局限性}{appendix.D}{}}
+\gdef \@abspage@last{23}

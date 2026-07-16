@@ -1,0 +1,17 @@
+{
+  "dataset": "Industrial_and_Scientific",
+  "source_dirs": [
+    "/home/cyx/EchoRec/EchoRec/analysis/scientific_sshg_k10",
+    "/home/cyx/EchoRec/EchoRec/analysis/scientific_sshg_k20",
+    "/home/cyx/EchoRec/EchoRec/analysis/scientific_sshg_k30",
+    "/home/cyx/EchoRec/EchoRec/analysis/scientific_sshg_k40",
+    "/home/cyx/EchoRec/EchoRec/analysis/scientific_sshg_k50"
+  ],
+  "neighbor_ks": [
+    10,
+    20,
+    30,
+    40,
+    50
+  ]
+}

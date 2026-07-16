@@ -1,0 +1,22 @@
+{
+  "dataset": "Movies_and_TV",
+  "sample_size": 2000,
+  "viz_seed": 42,
+  "viz_users": 1200,
+  "neighbor_k": 50,
+  "rbo_p": 0.9,
+  "models": {
+    "Pure-SI": {
+      "save_dir": "movies_pure_sasrec_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Movies_and_TV/SASRec_saving.epoch=200.lr=0.001.layer=2.head=1.hidden=64.maxlen=128.pth",
+      "teacher_kind": "raw",
+      "best_epoch": 22
+    },
+    "EchoRec": {
+      "save_dir": "movies_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Movies_and_TV/movies_sa_teacher/model_metric_best.pth",
+      "teacher_kind": "sacp",
+      "best_epoch": 17
+    }
+  }
+}

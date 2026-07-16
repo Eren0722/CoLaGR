@@ -1,0 +1,6 @@
+Representation similarity evaluation
+dataset=CDs_and_Vinyl, split=test, perturbation=shuffle
+
+model           cosine_mean  cosine_std   cosine_min   cosine_max   users
+Pure-SI         0.8260       0.1426       -0.1728       1.0000       14035
+EchoRec         0.9201       0.0999       -0.0393       1.0000       14035

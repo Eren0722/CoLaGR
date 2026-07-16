@@ -1,0 +1,1792 @@
+           Where Did Sequence Go? Reshaping Spaces for
+            LLM-Based Sequential Recommendation via
+                Large-Small Model Collaboration
+
+
+                                                  Anonymous Author(s)
+                                                      Affiliation
+                                                       Address
+                                                        email
+
+
+
+                                                         Abstract
+ 1             Large language models (LLMs) are advancing sequential recommendation by cou-
+ 2             pling semantic knowledge with sequential user modeling. Recent studies seek to
+ 3             project sequential representations into the LLM semantic space, thereby incorpo-
+ 4             rating sequential information into semantic reasoning. However, these methods
+ 5             overlook a semantic-sequential heterogeneity gap (SSHG) between the sequential
+ 6             space and the semantic space, which weakens sequence retention during cross-
+ 7             space transfer and makes sequential utilization less stable. To address these issues,
+ 8             we propose EchoRec, a staged and effective large-small model collaboration frame-
+ 9             work for LLM-based sequential recommendation. EchoRec first uses a frozen LLM
+10             to construct item and user semantic embeddings together with structured semantic
+11             neighborhood tables. Guided by our information-theoretic sequence-retention anal-
+12             ysis, EchoRec reshapes the sequential space through complementary contrastive
+13             objectives, where item-level semantic perturbation learning reduces local seman-
+14             tic metric mismatch, while user-level semantic-neighborhood learning mitigates
+15             topological fragmentation. Subsequently, Sequence Injection (SI) is introduced as
+16             a structure-aware transfer mechanism, injecting reshaped item embeddings into
+17             the frozen LLM while aligning LLM-side user representations with teacher rep-
+18             resentations. Extensive experiments on four datasets demonstrate that EchoRec
+19             consistently outperforms all baselines, indicating that reshaped cross-space transfer
+20             makes sequential cues more accessible and reliable for the LLM.
+
+
+21   1    Introduction
+22   With rapid advances in text understanding, contextual modeling, and open-domain reasoning, large
+23   language models (LLMs) are increasingly viewed as promising foundation models for recommen-
+24   dation [32, 42]. Their strong semantic capacity and unified modeling interface have motivated a
+25   growing body of work on using LLMs for recommendation and text-rich sequential modeling [3, 23].
+26   In sequential settings, recent studies further use LLMs as embedding generators or sequence-aware
+27   recommenders [11, 10]. User interaction histories are therefore no longer treated only as sparse col-
+28   laborative observations; they are also cast as inputs to semantic reasoning models that can potentially
+29   capture richer behavioral patterns [12]. These developments highlight an important question: how to
+30   introduce reliable sequential inductive bias into LLM-based recommendation without sacrificing the
+31   semantic strengths of LLMs [10, 12].
+32   Early efforts mainly adapted the LLM itself to recommendation through prompting and lightweight
+33   tuning [38]. Explicit reasoning scaffolds and large-recommender reasoning frameworks further
+34   extended this textual adaptation paradigm [8, 5]. As purely textual adaptation showed limits, later
+35   studies reintroduced collaborative knowledge by aligning LLMs with pretrained sequential rec-
+
+     Submitted to 40th Conference on Neural Information Processing Systems (NeurIPS 2026). Do not distribute.
+36   ommenders [18, 19] or injecting collaborative signals into the LLM context [33, 39]. Recent
+37   sequence-aware variants further emphasize preserving dynamic preferences during injection [12, 10].
+38   Another line keeps the LLM outside the online decision loop as a semantic encoder or relation
+39   provider for smaller sequential models [21, 22]. This offline semantic-enhancement direction also
+40   uses relation-guided, alignment-oriented, and contrastive semantic pre-training to connect sequential
+41   behavior with LLM-derived semantics [17, 25, 2]. Across these lines, online alignment and injection
+42   methods aim to connect behavior-derived sequential spaces with LLM semantic spaces [18, 33],
+43   while sequence-aware distillation and semantic-enhancement methods pursue the same goal from
+44   complementary directions [10, 2].
+45   However, the sequential space and the LLM semantic space obey different neighborhood rules.
+46   The former reflects ID co-occurrence, popularity bias, and sparse interaction noise, whereas the
+47   latter is organized by textual semantics and world knowledge [32]. We refer to this gap as the
+48   Semantic-Sequential Heterogeneity Gap (SSHG). SSHG mainly appears in two forms that matter for
+49   injection: local semantic metric mismatch, where semantic neighbors in the frozen LLM space are
+50   not preserved in the raw SRec space, and semantic-neighborhood topological fragmentation, where
+51   semantically similar users or sequences fail to form coherent local regions. Recent work on token-
+52   level collaborative alignment points to incompatible local rules across these spaces [6]. LLM-based
+53   view augmentation and cross-modal contrastive learning report related mismatches from different
+54   angles [14, 24]. As a result, a lightweight projector may weaken transferable sequential cues when
+55   forced to denoise, reorganize local structure, and align the sequential space at once. Recent diagnosis
+56   reports the same symptom: LLM-based recommenders may rely on shortcut context rather than stable
+57   sequential dependence [10, 7]. Reasoning-oriented recommendation studies further explore explicit
+58   reasoning scaffolds, but such scaffolds do not by themselves establish whether sequential preference
+59   is truly captured [8, 10].
+60   From a cross-space transfer viewpoint, effective injection requires a teacher space whose local geom-
+61   etry is compatible with the target semantic host. Inspired by recent large-small collaboration studies
+62   in recommendation [9, 13], we propose EchoRec, a staged large-small collaborative recommendation
+63   framework organized around reshape first, inject later. EchoRec first uses a frozen LLM to construct
+64   offline semantic assets from items and user histories, and then applies Semantic-Aligned Contrastive
+65   Pre-training (SACP) to the sequential teacher under next-item supervision together with item-level and
+66   user-level semantic constraints, reducing local semantic metric mismatch and semantic-neighborhood
+67   fragmentation in the teacher space. Sequence Injection (SI) then projects the purified teacher item
+68   embeddings into the frozen LLM and aligns LLM-side user states with teacher representations,
+69   transferring refined sequential structure with lower cross-space distortion.
+70   Our contributions are summarized as follows:
+
+71       • We propose EchoRec, a staged large-small collaboration framework for LLM-based sequential
+72         recommendation. It first reshapes the teacher space with SACP and then injects refined sequential
+73         structure into a frozen LLM under teacher alignment.
+74       • We formalize SSHG in LLM-enhanced sequential recommendation, characterize it through local
+75         semantic metric mismatch and semantic-neighborhood topological fragmentation, and show how
+76         it hinders cross-space transfer.
+77       • We provide an information-theoretic retention analysis showing how EchoRec reduces controllable
+78         transfer loss, improving sequence retention and supporting more stable sequential utilization in
+79         the LLM.
+80       • Experiments on four benchmark datasets show that EchoRec consistently outperforms strong
+81         baselines, improves alignment and structure transfer, and remains more stable under sequence
+82         perturbation. Code is available at https://github.com/EchoRec/EchoRec.
+
+83   2     Problem Definition
+84   Let U denote the user set and I denote the item set. For each user u ∈ U, the observed interaction
+85   history is a chronologically ordered sequence Su = [iu1 , iu2 , . . . , iunu −1 ] with iut ∈ I. Sequential
+86   recommendation aims to predict the next item yu = iunu from the history Su . Formally, it seeks:
+                                            arg max P (yu = i | Su ),                                       (1)
+                                                 i∈I
+
+
+                                                         2
+ 87   where Su is the observed history and yu is the target next item. Conventional sequential models such
+ 88   as GRU4Rec [31], SASRec [36], and BERT4Rec [35] therefore carry explicit sequential inductive
+ 89   bias, but their representation spaces remain largely dominated by ID co-occurrence.
+
+ 90   2.1   LLM4Rec setting
+
+ 91   In this paper, LLM4Rec refers to recommendation methods that keep the LLM in the online decision
+ 92   loop and use it to produce the recommendation output. Under this setting, user history is typically fed
+ 93   into the LLM via textual prompts or soft prompts. For feature-injection-based methods, collaborative
+ 94   representations from a small recommender are first mapped into the LLM hidden space and then used
+ 95   as contextual conditions during inference. Diagnostic evidence from prior work [10] suggests that
+ 96   existing LLM4Rec models exhibit limited sensitivity to sequential perturbation, indicating that “input
+ 97   history” is not equivalent to “stable sequential utilization.”
+
+ 98   2.2   Semantic-Sequential Heterogeneity Gap (SSHG)
+
+ 99   Let SCF denote the collaborative representation space learned by a conventional sequential recom-
+100   mender, and let SLLM denote the semantic space intrinsic to the LLM. The former is primarily
+101   shaped by ID co-occurrence statistics, whereas the latter is organized by semantic logic and language
+102   priors. In this paper, we use Semantic-Sequential Heterogeneity Gap (SSHG) to denote the system-
+103   atic mismatch between these two spaces that matters for cross-space injection. Concretely, SSHG
+104   contains two coupled aspects: local semantic metric mismatch, where the nearest-neighbor structure
+105   in the collaborative space SCF disagrees with that in SLLM , and semantic-neighborhood topological
+106   fragmentation, where semantically similar users or sequences fail to form coherent neighborhoods.
+107   Appendix A later instantiates SSHG through local soft-neighborhood distributions. For user u, we
+108   define the KL-defined SSHG as Su = DKL (pseq        sem
+                                                     u ∥pu ), which measures the extra coding cost of
+109   representing the teacher-side sequential neighborhood using the frozen semantic reference.
+                                             |U |
+110   Given a training set D = {(Su , yu )}u=1 , the generic sequential recommendation objective is:
+                                                     1       X
+                                   min Lrec = −                         log PΘ (yu | Su ),                     (2)
+                                    Θ               |D|
+                                                          (Su ,yu )∈D
+
+111   where D is the training set, Θ denotes trainable parameters, and Lrec is the generic next-item
+112   recommendation loss. EchoRec instantiates this supervision on both the teacher side and the LLM
+113   side, while adding structural constraints that target SSHG before and during cross-space transfer.
+
+
+114   3     Method
+
+115   3.1   Overview
+
+116   EchoRec follows a reshape-first, inject-later pipeline. Given a sequence Su = [iu1 , . . . , iuTu ], a frozen
+117   LLM first provides stable semantic references for items and user histories. Stage I then trains a
+118   sequential teacher with next-item supervision plus semantic constraints, so that the teacher remains
+119   discriminative while its local neighborhoods become more compatible with the LLM semantic space.
+120   Stage II freezes this enhanced teacher and injects its item-level signals into the frozen LLM, while
+121   aligning LLM-side user states with the teacher-side user representation. Let Gsr and G+      sr denote the
+                                                        +
+122   original and enhanced sequential teachers; let Eitem  , Πϕ , Mψ , fu , and fi denote the enhanced item
+123   table, item projector, teacher-side mapper, and LLM-side user/item heads. The online trainable part
+124   is therefore limited to lightweight modules, whereas the LLM supplies a fixed semantic host.
+
+125   3.2   Semantic asset preparation
+
+126   EchoRec uses the frozen LLM only to construct offline semantic anchors. Item inputs are built from
+127   titles and available metadata, while user inputs textualize the chronological title sequence. For an
+128   item or user-history text x, let the last-layer hidden output be H(L) (x) ∈ RLx ×dsem with attention
+
+
+                                                             3
+      Figure 1: Overall architecture of EchoRec. A frozen LLM first builds semantic assets for large-small
+      collaboration. Stage I then reshapes the sequential teacher with SACP, and Stage II injects refined
+      sequential embeddings into the frozen LLM via SI.
+
+
+129   mask m ∈ {0, 1}Lx . We obtain its semantic vector by masked mean pooling:
+                                                                       !
+                                                      PLx        (L)
+                                                         t=1 mt Ht (x)
+                               Encsem (x) = Norm           PLx           ,                              (3)
+                                                             t=1 mt
+
+130   where Norm(·) denotes vector normalization. For nodes v and v ′ , we compute semantic similarity
+131   by:
+                                                      (esem )⊤ esem
+                                                                 v′
+                                     ssem (v, v ′ ) = sem
+                                                        v
+                                                                       ,                           (4)
+                                                     ∥ev ∥2 ∥esem
+                                                                v ′ ∥2
+132   and cache the corresponding semantic neighborhood:
+                                         K
+                                        Nsem (v) = TopK ssem (v, v ′ ),                                 (5)
+                                                   v ′ ∈V\{v}
+
+133   where V is the node universe. These assets are never updated during training. Item neighborhoods
+134   provide semantic-preserving substitutions, and user-history neighborhoods provide local semantic
+135   regions that the teacher should not fragment.
+
+136   3.3   Stage I: Semantic-Aligned Contrastive Pre-training (SACP)
+
+137   Stage I turns the original collaborative teacher into a transfer-ready teacher. It keeps next-item
+138   supervision for recommendation accuracy and adds two semantic constraints targeted at SSHG: an
+139   item-level branch stabilizes responses to semantic-preserving item changes, and a user-level branch
+140   pulls semantically related histories into smoother local regions.
+141   Sequential signal. Let zraw
+                               u    ∈ Rds denote the last-position output of Gsr for Su , and let ru be its
+142   contrastive-head projection. Stage I first preserves the teacher’s next-item decision ability:
+                                                                        ⊤
+                                                                              
+                                            1 X            exp (zraw
+                                                                   u ) qyu
+                                Lsr
+                                  rec = −           log                raw ⊤
+                                                                                 ,                    (6)
+                                           |B|
+                                                        P
+                                                u∈B        j∈I exp (zu ) qj
+
+143   where qj is the item embedding.
+
+
+                                                       4
+144   Item-level semantic consistency. Random item perturbations can destroy the user’s intent and create
+                                                          (1)      (2)
+145   false positives. EchoRec instead builds two views S̃u and S̃u by replacing only a subset of items
+146   with neighbors from the frozen item semantic table. After re-encoding the views, we optimize:
+                                                                          (1)    (2)
+                                           1 X       exp(sim(ru , ru )/τs )
+                              Li-cl = −        log P             (1) (2)
+                                                                               ,                           (7)
+                                          |B|           exp(sim(ru , rv )/τs )
+                                               u∈B           v∈B
+
+              (1)      (2)
+147   where ru and ru are projected views, sim(·, ·) is cosine similarity, and τs is the temperature. This
+148   branch makes the teacher less tied to exact item IDs when the substituted items preserve semantics.
+149   User-level semantic aggregation. Item-level consistency alone does not ensure that semantically
+                                                               K         K
+150   similar histories occupy a coherent teacher region. For Nu,sem := Nsem (u), EchoRec forms a soft
+151   semantic-neighborhood target:
+                                                    exp(κ(esem    sem
+                                                             u , ev   ))
+                                    wu,v = P                      sem , esem ))
+                                                                                ,                          (8)
+                                                  ′  K
+                                                 v ∈Nu,sem exp(κ(eu      v′
+
+152   The mixed neighborhood representation is:
+                                                          X
+                                               r̄u =               wu,v ru,v ,                             (9)
+                                                          K
+                                                       v∈Nu,sem
+
+153   where κ(·, ·) scores frozen semantic assets and ru,v is the projected representation of neighbor v. We
+154   use r̄u as the positive target:
+                                            1 X       exp(sim(ru , r̄u )/τs )
+                               Lu-cl = −        log P                            ,                        (10)
+                                           |B|       v∈B exp(sim(ru , r̄v )/τs )
+                                                u∈B
+
+155   This branch reduces semantic-neighborhood fragmentation in the teacher space.
+156   Overall Stage I objective. Combining sequential recommendation supervision with the two semantic
+157   constraints, the Stage I objective is:
+                                        LSACP = Lsr
+                                                 rec + λu Lu-cl + λi Li-cl ,                              (11)
+158   where λu and λi control the two constraints. After optimization, the contrastive head is discarded;
+                                                                         +
+159   Stage II uses the reshaped backbone G+
+                                           sr and enhanced item table Eitem .
+
+
+160   3.4   Stage II: Structure-aware Sequence Injection
+
+161   Stage II transfers the reshaped teacher into the frozen LLM without updating the LLM backbone. The
+162   goal is not to copy hidden states token by token, but to make the LLM-side retrieval representation
+163   preserve the teacher’s discriminative user-item geometry.
+164   Teacher signal extraction and LLM reading. Given history Su and candidate set Cu , the enhanced
+                                                                 +
+165   teacher outputs z+       +
+                       u = Gsr (Su ) and item embeddings cj = Eitem (j) for j ∈ Su ∪ Cu . The projector
+166   Πϕ maps each cj into the LLM hidden space and inserts it at [HistoryEmb]. The frozen LLM then
+167   produces [UserOut] and [ItemOut] states, which fu and fi map into the retrieval subspace. In parallel,
+168   Mψ maps z+  u to the teacher-side target t̂u .
+                                                                 −            −
+169   Ranking loss and teacher matching loss. Let Cu = {ju+ , ju,1 , . . . , ju,n−1 } denote the candidate set.
+170   The user-item matching score in the shared retrieval subspace is:
+                                                       su,j = û⊤
+                                                                u v̂j ,                                   (12)
+171   where ûu and v̂j are LLM-side user and item representations. Since the positive item is fixed at the
+172   first position during training, the Stage-II recommendation loss is:
+                                                  1 X       exp(su,ju+ )
+                                     Lllm
+                                      rec = −         log P                ,                              (13)
+                                                 |B|       j∈Cu exp(su,j )
+                                                       u∈B
+
+173   where ju+ is the positive item in Cu .
+
+
+                                                              5
+174   Ranking alone can let the LLM-side user state drift toward generic semantic cues. We therefore
+175   match it to the enhanced teacher in the same retrieval subspace:
+                                        1 X                2
+                            Lmatch =             uu − tu 2 + Runi (u) + Runi (t),               (14)
+                                       |B|
+                                           u∈B
+
+176   where uu and tu are normalized LLM-side and teacher-side user representations, and Runi (·) is a
+177   batch-wise uniformity regularizer. Thus, the ranking loss learns recommendation decisions, while the
+178   matching loss keeps injected user structure close to the reshaped teacher.
+179   Overall Stage II objective. The Stage-II objective is therefore:
+                                             LSI = Lllm
+                                                    rec + Lmatch ,                                     (15)
+180   Only the lightweight modules Πϕ , fu , fi , and Mψ are updated, with the LLM backbone frozen.
+
+181   3.5    Retention View and Training Pipeline
+
+182   The pipeline above can be read as a sequence-retention mechanism. Appendix A formalizes this view
+183   with local soft-neighborhood distributions, where the retained sequence signal is measured by how
+184   much the injected LLM-side neighborhood deviates from the reshaped teacher-side neighborhood.
+185   The resulting bound separates three sources of loss: teacher-space SSHG, a semantic-host residual,
+186   and injection-time drift.
+187   This decomposition explains the training order. SACP attacks the first term before transfer by using
+188   frozen semantic neighborhoods as local references, so the teacher no longer presents SI with a raw
+189   ID-dominated geometry. SI then attacks the drift term by aligning the LLM-side user representation
+190   to the reshaped teacher while learning the ranking objective. The residual term records host-specific
+191   mismatch that is not directly optimized, which is why our diagnosis separately measures pre-injection
+192   alignment and post-injection structure transfer. Operationally, EchoRec follows three steps: build
+193   frozen semantic assets, reshape the teacher with LSACP , and inject the enhanced teacher with LSI .
+
+194   4     Experiments
+195   We evaluate on four shared-benchmark datasets and ask:
+196       • RQ1: How does EchoRec compare with directly comparable baselines on the shared benchmark?
+197       • RQ2: Which components contribute most to the overall improvement?
+198       • RQ3: Does EchoRec remain stable under inference-time sequence perturbation?
+199       • RQ4: Does reducing SSHG improve alignment and structure transfer in controlled diagnosis?
+200       • RQ5: Is EchoRec effective across different sequential teacher backbones?
+
+201   4.1    Experimental setup
+
+202   Datasets. We follow the shared benchmark protocol of Kim et al. [10] on four datasets: Movies,
+203   Scientific, Electronics, and CDs. For each user, we adopt the standard leave-one-out sequential split.
+204   Full dataset statistics are deferred to Appendix B.1.
+205   Evaluation Metrics. During evaluation, each test case is ranked against 1 positive item + 99 negative
+206   items. We report NDCG@10, NDCG@20, HR@10, and HR@20, and use validation NDCG@10 as
+207   the checkpoint criterion.
+208   Compared Methods. Under the same retrieval-style protocol, we compare EchoRec with nine
+209   directly comparable baselines: GRU4Rec [31], BERT4Rec [35], NextItNet [37], SASRec [36],
+210   TALLRec [38], LLaRA [18], A-LLMRec [19], CoLLM [33], and LLM-SRec [10]. Detailed grouping
+211   and comparison notes are summarized in Appendix B.2.
+212   Implementation Details. We follow the released protocols for directly comparable LLM4Rec
+213   baselines. EchoRec is model-agnostic and can be integrated with various sequential recommendation
+214   models. To introduce our approach, we adopt the Transformer architecture as the sequential teacher in
+215   the main setting, following prior studies on sequential recommendation [26, 2]. Section 4.6 validates
+216   the model-agnostic nature of EchoRec. Appendix B gives details.
+
+
+                                                        6
+      Table 1: Overall performance on the shared benchmark of Kim et al. [10]. We compare EchoRec
+      with nine directly comparable baselines under the same protocol. The rightmost column reports
+      EchoRec’s relative improvement over the strongest prior LLM4Rec baseline. Best results are in bold.
+                                                     SRec                                              LLM4Rec
+        Dataset        Metric                                                                                                              Improv.
+                                  SASRec GRU4Rec BERT4Rec NextItNet TALLRec LLaRA A-LLMRec CoLLM LLM-SRec EchoRec
+                     NDCG@10      0.3459    0.3152      0.2959     0.2538        0.1668   0.1522    0.3263   0.3223     0.3560    0.4088   +14.8%
+                     NDCG@20      0.3745    0.3494      0.3303     0.2879        0.2126   0.1944    0.3629   0.3577     0.3924    0.4417   +12.6%
+        Movies
+                      HR@10       0.5180    0.4883      0.4785     0.4221        0.3234   0.2914    0.5127   0.5089     0.5569    0.6160   +10.6%
+                      HR@20       0.6310    0.6245      0.6213     0.5522        0.5060   0.4599    0.6577   0.6491     0.7010    0.7453   +6.3%
+                     NDCG@10      0.2918    0.2642      0.2576     0.2263        0.2585   0.2844    0.2875   0.3111     0.3388    0.3822   +12.8%
+                     NDCG@20      0.3245    0.2974      0.2913     0.2657        0.3048   0.3265    0.3246   0.3489     0.3758    0.4151   +10.5%
+       Scientific
+                      HR@10       0.4691    0.4313      0.4437     0.3908        0.4574   0.4993    0.4957   0.5182     0.5532    0.6008   +8.6%
+                      HR@20       0.5987    0.5524      0.5822     0.5356        0.6276   0.6658    0.6427   0.6676     0.6992    0.7310   +4.5%
+                     NDCG@10      0.2267    0.2364      0.1867     0.1712        0.2249   0.2048    0.2791   0.2565     0.3044    0.3228   +6.1%
+                     NDCG@20      0.2606    0.2743      0.2172     0.2069        0.2670   0.2454    0.3173   0.2948     0.3424    0.3620   +5.7%
+      Electronics
+                      HR@10       0.3749    0.3843      0.3325     0.3017        0.3802   0.3441    0.4622   0.4236     0.4885    0.5254   +7.6%
+                      HR@20       0.5096    0.5196      0.4740     0.4324        0.5476   0.5032    0.6137   0.5741     0.6385    0.6806   +6.6%
+                     NDCG@10      0.3451    0.2155      0.3019     0.2207        0.3100   0.2464    0.3119   0.3152     0.3809    0.4432   +16.4%
+                     NDCG@20      0.3795    0.2530      0.3386     0.2562        0.3493   0.2951    0.3526   0.3557     0.4158    0.4761   +14.5%
+         CDs
+                      HR@10       0.5278    0.3712      0.5018     0.3842        0.5052   0.4665    0.5300   0.5290     0.6085    0.6796   +11.7%
+                      HR@20       0.6635    0.5092      0.6605     0.5422        0.6633   0.6590    0.6914   0.6895     0.7461    0.8094   +8.5%
+
+
+
+      Table 2: Ablation results on all four datasets. The best result in each dataset/metric is shown in bold.
+                                           Movies                   Scientific                Electronics                  CDs
+                      Method
+                                   NDCG@10 HR@10 NDCG@10 HR@10 NDCG@10 HR@10 NDCG@10 HR@10
+                    EchoRec          0.4088      0.6160          0.3822     0.6008         0.3228       0.5254        0.4432     0.6796
+                    w/o User-CL      0.3976      0.5988          0.3704     0.5816         0.3086       0.5030        0.4236     0.6586
+                    w/o Item-CL      0.4017      0.6036          0.3679     0.5814         0.3127       0.4998        0.4368     0.6674
+                    w/o Match        0.3986      0.6012          0.3753     0.5916         0.3174       0.5124        0.4266     0.6622
+                    w/o SACP         0.3697      0.5667          0.3170     0.5230         0.2756       0.4584        0.3733     0.5960
+
+
+
+217   4.2      Overall performance on the shared benchmark (RQ1)
+
+218   Table 1 reports the unified benchmark comparison: the first four columns are conventional sequential
+219   recommenders, the next six are directly comparable LLM4Rec methods, and the rightmost column
+220   gives EchoRec’s gain over the strongest prior LLM4Rec baseline. EchoRec achieves the best results
+221   on all datasets, with relative gains of 4.5%–16.4%. Two patterns emerge. Conventional SRec
+222   models remain competitive, confirming the value of sequential inductive bias, but they do not use the
+223   LLM host’s semantic reasoning. Prior LLM4Rec methods improve over prompt-only adaptation yet
+224   still transfer raw collaborative geometry that can conflict with the LLM semantic space. EchoRec
+225   combines both sides: SACP reshapes the teacher space with frozen semantic neighborhoods, and SI
+226   injects a cleaner sequential signal. This is why the gains hold not only on NDCG, which rewards
+227   top-rank ordering, but also on HR, which reflects candidate recall. The gains are especially visible on
+228   CDs and Movies, where useful descriptions and sparse interactions make direct ID-space transfer
+229   fragile. Sections 4.5 and 4.6 further show that the gains are not merely from stronger injection and
+230   are not tied to one teacher backbone.
+
+231   4.3      Ablation study (RQ2)
+
+232   Table 2 shows a stable hierarchy across datasets. Removing teacher-side reshaping (w/o SACP)
+233   causes the largest NDCG@10 and HR@10 drops: NDCG@10 falls from 0.4088 to 0.3697 on
+234   Movies, 0.3822 to 0.3170 on Scientific, 0.3228 to 0.2756 on Electronics, and 0.4432 to 0.3733 on
+235   CDs. This confirms that the main gain is not simply from adding an LLM-side projector; when the
+236   teacher space remains noisy or fragmented, SI must both repair local structure and transfer across
+237   spaces. The single-component removals are smaller but consistent. Item-CL reduces sensitivity
+238   to exact ID substitutions, so semantically close items induce steadier sequence states. User-CL
+239   smooths semantically related sparse or fragmented histories, improving neighborhood coherence
+240   before transfer. Match keeps the injected LLM user state near the reshaped sequential subspace
+241   instead of drifting toward generic semantic cues. Overall, the pattern supports a complementary
+242   division of labor: SACP purifies the teacher space before transfer, and Match stabilizes the transferred
+243   representation after injection.
+
+
+                                                                             7
+              Pure-SI      EchoRec              Pure-SI EchoRec         0.09 Pure-SI EchoRec          0.30 Pure-SI EchoRec
+       0.5 +14.8% +17.8%      +15.4%      0.8 +10.5% +11.6%
+                                                          +12.4%
+                                                                 +11.6%
+       0.4             +18.9%             0.6                           0.06                          0.20
+       0.3                                0.4
+       0.2                                0.2
+       0.1                                                              0.03              20 = +61.6% 0.10              20 = +67.5%
+       0.0 Orig. Shuf. Rev. Drop          0.0 Orig. Shuf. Rev. Drop          10 20 30 40 50                10 20 30 40 50
+                                 rec.                            rec.          Neighborhood size k           Neighborhood size k
+
+            (a) NDCG@10                         (b) HR@10                   (a) Semantic Alignment          (b) Structure Transfer
+      Figure 2: Sequence perturbation under                                Figure 3: Controlled SSHG diagnosis across
+      input-history perturbations.                                         neighborhood scales.
+
+      Table 3: Cross-dataset controlled SSHG diagnosis at k = 20. For each metric and dataset, we report
+      the Pure-SI value, the EchoRec value, and the relative improvement of EchoRec over Pure-SI.
+                                 Movies                      Scientific                      Electronics                   CDs
+         Metric
+                    Pure-SI EchoRec Improv.         Pure-SI EchoRec Improv.         Pure-SI EchoRec Improv.      Pure-SI EchoRec Improv.
+      PreAlign@20       0.0245   0.0471   +92.4%    0.0276   0.0654       +136.7%   0.0166    0.0500   +200.4%   0.0331   0.0535   +61.6%
+      Jaccard@20        0.0529   0.1053   +99.0%    0.0790   0.1625       +105.6%   0.0415    0.0850   +104.8%   0.1155   0.1934   +67.5%
+      RBO@20            0.0544   0.1234   +126.9%   0.0995   0.1885       +89.4%    0.0541    0.1036   +91.3%    0.1297   0.2283   +75.9%
+      NDCG@10           0.3657   0.4088   +11.8%    0.3137   0.3797       +21.0%    0.2736    0.3313   +21.1%    0.3718   0.4275   +15.0%
+
+
+
+
+244   4.4   Sequence perturbation stability (RQ3)
+
+245   Figure 2 evaluates inference-time sequence perturbations on CDs under original, shuffle, reverse,
+246   and recent-item removal settings. EchoRec keeps higher clean-input performance and degrades less
+247   under moderate perturbations such as shuffle and recent-item removal. This suggests that EchoRec
+248   does not merely memorize item IDs or prompt surface forms; the SACP teacher learns smoother
+249   semantic neighborhoods, making small history changes less likely to cause abrupt drift after SI. Full
+250   reversal still hurts both methods, as desired, because chronological preference evolution is central
+251   to sequential recommendation. Thus, EchoRec better balances robustness and order sensitivity: it
+252   tolerates moderate noise while still responding to severe temporal disruption. Additional Movies,
+253   Scientific, and Electronics results are deferred to Appendix Figure 5.
+
+254   4.5   Controlled SSHG diagnosis (RQ4)
+
+255   With the dataset, LLM backbone, protocol, and budget fixed, Figure 3 isolates teacher-space reshaping
+256   on CDs by comparing EchoRec with Pure-SI. EchoRec raises pre-injection semantic-neighborhood
+257   overlap in panel (a) and yields higher post-injection structure transfer in panel (b). SACP reduces the
+258   later projector’s burden: rather than mapping a raw ID-dominated teacher space into the LLM host,
+259   SI receives a teacher space with local neighborhoods already more compatible with frozen semantic
+260   neighborhoods. Thus, SI preserves teacher-side overlap and rank fidelity in the LLM space.
+261   Table 3 extends this test to all datasets at k = 20: PreAlign@20 measures teacher–semantic
+262   compatibility before SI, Jaccard@20 and RBO@20 measure preserved overlap and rank fidelity after
+263   SI, and NDCG@10 measures downstream ranking. The positive deltas across datasets show that
+264   the “reshape first, inject later” pattern generalizes: alignment improves before injection, structure
+265   preservation improves after injection, and ranking gains follow downstream. This supports our SSHG
+266   interpretation that reducing teacher–semantic mismatch makes sequential cues more accessible to the
+267   LLM host, rather than simply increasing capacity.
+
+268   4.6   Model-agnostic evaluation (RQ5)
+
+269   We further test whether EchoRec depends on one specific sequential encoder by integrating the full
+270   pipeline with GRU4Rec, SASRec, and BERT4Rec teacher backbones under the same LLM host and
+271   protocol. Figure 4 shows consistent improvements on both CDs and Movies across all three teachers.
+272   The gains hold for recurrent, self-attentive, and bidirectional encoders, indicating that teacher-space
+273   reshaping is a transferable mechanism rather than a Transformer-specific effect.
+
+
+                                                                           8
+             Pure-SI    EchoRec          Pure-SI   EchoRec            Pure-SI     EchoRec              Pure-SI      EchoRec
+                       +20.5%     0.8 +10.0% +12.4% +9.5%                         +8.4% +10.3%
+                                                                                               0.8 +7.6%           +7.4%
+          +14.0%           +10.2%                                                                                             +6.9%
+      0.4                         0.6                         0.4 +9.3%                        0.6
+                                  0.4                                                          0.4
+      0.2                         0.2                         0.2                              0.2
+      0.0 SASRec BERT4Rec GRU4Rec 0.0 SASRec BERT4Rec GRU4Rec 0.0 BERT4Rec      SASRec GRU4Rec
+                                                                                               0.0 BERT4Rec      SASRec    GRU4Rec
+
+            (a) CDs NDCG@10              (b) CDs HR@10             (c) Movies NDCG@10                (d) Movies HR@10
+            Figure 4: Model-agnostic evaluation with GRU4Rec, SASRec, and BERT4Rec teachers.
+
+
+274   5     Related Work
+
+275   5.1   Sequential recommendation
+
+276   Sequential recommendation mainly focuses on identifying similar items or users from collabora-
+277   tive filtering signals and modeling how user preference evolves over interaction histories. Early
+278   methods combined matrix factorization with Markov transitions to capture temporal dynamics, such
+279   as FPMC [29]. Neural models then pushed this line forward: GRU4Rec [31] used recurrent ar-
+280   chitectures, NextItNet [37] introduced convolutional sequence modeling, and later SASRec [36]
+281   and BERT4Rec [35] further improved sequence representation with attention-based architectures.
+282   Recent studies such as ICLRec [28], C2lRec [34], CMCLRec [24], CLLMRec [14], HPSERec [1],
+283   and FMLP-Rec [27] continue to strengthen sequence learning through intent contrast, causal con-
+284   trast, multimodal enhancement, LLM-based view augmentation, long-tail modeling, and lightweight
+285   encoders. Despite these advances, sequential recommender spaces are still mainly shaped by ID
+286   co-occurrence and exposure statistics, and therefore often lack sufficiently smooth and compatible
+287   semantic structure when transferred into an LLM host.
+
+
+288   5.2   LLM-based recommendation
+
+289   With the rise of large language models, recommendation research has explored tighter ways of
+290   coupling LLMs with sequential signals [32, 42]. Early efforts mainly adapted LLMs through
+291   prompting or lightweight tuning: TALLRec [38] uses PEFT to bridge language modeling and
+292   recommendation, while ThinkRec [8] further introduces explicit reasoning. As purely textual
+293   adaptation showed clear limits, later work brought collaborative knowledge back into the LLM
+294   pipeline. LLaRA [18] combines CF-SRec item embeddings with textual prompts, CoLLM [33]
+295   directly injects collaborative embeddings into the online LLM context, and A-LLMRec [19] further
+296   strengthens CF knowledge absorption through representation alignment. Recent work further exposes
+297   weak dynamic-preference modeling in LLM4Rec and introduces sequence-aware distillation [10].
+298   Another line uses LLMs to enhance smaller recommenders, including RLMRec [21], LRD [22],
+299   LLM-ESR [25], SRA-CL [2], and LLMEmb [15], while related efforts explore collaborative retrieval
+300   augmentation, plug-in LLM contrastive representations, logical or role-aware recommendation, and
+301   token-level collaborative alignment [20, 16, 4, 6].
+302   Inspired by recent large-small collaboration studies [9, 13], we argue that these two directions should
+303   not be treated separately. Nevertheless, existing methods mainly focus on injection-time alignment or
+304   distillation, largely overlooking structural mismatch between the teacher space and the LLM host.
+
+
+305   6     Conclusion
+
+306   This paper studies the Semantic-Sequential Heterogeneity Gap (SSHG) in LLM-enhanced sequential
+307   recommendation and proposes EchoRec, which reshapes the SRec space with SACP before injecting
+308   structure-aware signals via SI. We instantiate SSHG as local semantic metric mismatch and semantic-
+309   neighborhood topological fragmentation, both targeted before injection. Experiments show consistent
+310   gains over strong baselines, and controlled diagnosis confirms better SRec-semantic alignment and
+311   local-structure preservation. Overall, reducing teacher-space mismatch and injection-time drift
+312   improves sequence retention in the LLM space.
+
+
+                                                             9
+313   References
+314    [1] Xiaolong Xu, Xudong Zhao, Haolong Xiang, Xuyun Zhang, Wei Shen, Hongsheng Hu, and
+315        Lianyong Qi. 2025. HPSERec: A Hierarchical Partitioning and Stepwise Enhancement Frame-
+316        work for Long-tailed Sequential Recommendation. In Advances in Neural Information Process-
+317        ing Systems 39 (NeurIPS ’25).
+
+318    [2] Ziqiang Cui, Yunpeng Weng, Xing Tang, Xiaokun Zhang, Shiwei Li, Peiyang Liu, Bowei He,
+319        Dugang Liu, Weihong Luo, Xiuqiang He, and Chen Ma. 2025. SRA-CL: Semantic retrieval aug-
+320        mented contrastive learning for sequential recommendation. In Advances in Neural Information
+321        Processing Systems 39 (NeurIPS ’25).
+
+322    [3] Qijiong Liu, Jieming Zhu, Lu Fan, Kun Wang, Hengchang Hu, Wei Guo, Yong Liu, and Xiao-
+323        Ming Wu. 2025. Can LLMs Outshine Conventional Recommenders? A Comparative Evaluation.
+324        In Advances in Neural Information Processing Systems 39 (NeurIPS ’25).
+
+325    [4] Qing Yu, Xiaobei Wang, Shuchang Liu, Yandong Bai, Xiaoyu Yang, Xueliang Wang, Chang
+326        Meng, Shanshan Wu, Hailan Yang, Bin Wen, Huihui Xiao, Xiang Li, Fan Yang, Xiaoqiang
+327        Feng, Lantao Hu, Han Li, Kun Gai, and Lixin Zou. 2025. Who You Are Matters: Bridging
+328        Topics and Social Roles via LLM-Enhanced Logical Recommendation. In Advances in Neural
+329        Information Processing Systems 39 (NeurIPS ’25).
+
+330    [5] Runyang You, Yongqi Li, Xinyu Lin, Xin Zhang, Wenjie Wang, Wenjie Li, and Liqiang Nie.
+331        2025. R2ec: Towards Large Recommender Models with Reasoning. In Advances in Neural
+332        Information Processing Systems 39 (NeurIPS ’25).
+
+333    [6] Zhuowei Lin, Huan Yao, Xingchen Ma, Ruiran Yan, Yuxiang Ren, Xian Wu, Zhixiang Zhang,
+334        and Yong Li. 2026. Token-level collaborative alignment for LLM-based generative recommen-
+335        dation. In Proceedings of the ACM Web Conference 2026 (WWW ’26). ACM.
+
+336    [7] Yue Wang, Guibiao Wang, Mingde Yao, Jiawei Chen, Xin Xin, and Fuli Feng. 2026. Does LLM
+337        focus on the right words? Mitigating context bias in LLM-based recommenders. In Proceedings
+338        of the ACM Web Conference 2026 (WWW ’26). ACM.
+339    [8] Qihang Yu, Kairui Fu, Zheqi Lv, Shengyu Zhang, Xinhui Wu, Chen Lin, Feng Wei, Bo Zheng,
+340        and Wenwu Ou. 2026. ThinkRec: Thinking-based recommendation via LLM. In Proceedings of
+341        the ACM Web Conference 2026 (WWW ’26). ACM.
+
+342    [9] Yipeng Zhang, Xin Wang, Hong Chen, Junwei Pan, Qian Li, Jun Zhang, Jie Jiang, Hong Mei,
+343        and Wenwu Zhu. 2026. Cross-Scale Collaboration between LLMs and Lightweight Sequential
+344        Recommenders with Domain-Specific Latent Reasoning. In Proceedings of the AAAI Conference
+345        on Artificial Intelligence (AAAI ’26).
+
+346   [10] Kibum Kim, Hongseok Kang, Sein Kim, Jiwan Kim, Donghyun Kim, Minchul Yang, and
+347        Chanyoung Park. 2025. Lost in sequence: Do large language models understand sequential rec-
+348        ommendation? In Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery
+349        and Data Mining (KDD ’25). ACM.
+
+350   [11] Yingzhi He, Xiaohao Liu, An Zhang, Yunshan Ma, and Tat-Seng Chua. 2025. LLM2Rec:
+351        Large language models are powerful embedding models for sequential recommendation. In
+352        Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining
+353        (KDD ’25). ACM.
+
+354   [12] Minjie Hong, Yan Xia, Zehan Wang, Jieming Zhu, Ye Wang, and Sihang Cai. 2025. EAGER-
+355        LLM: Enhancing large language models as recommenders through exogenous behavior-semantic
+356        integration. In Proceedings of the ACM Web Conference 2025 (WWW ’25). ACM.
+
+357   [13] Zheqi Lv, Hongyan Zhao, Han Wang, Yang Song, Yongsheng Zhang, Yuxiang Wang, and
+358        Dawei Yin. 2025. Collaboration of large language models and small recommendation models
+359        for device-cloud recommendation. In Proceedings of the 31st ACM SIGKDD Conference on
+360        Knowledge Discovery and Data Mining (KDD ’25). ACM.
+
+
+                                                    10
+361   [14] Fan Lu, Xiaolong Xu, Haolong Xiang, Lianyong Qi, Xiaokang Zhou, Fei Dai, and Wanchun Dou.
+362        2025. CLLMRec: Contrastive Learning with LLMs-based View Augmentation for Sequential
+363        Recommendation. In Proceedings of the Thirty-Fourth International Joint Conference on
+364        Artificial Intelligence (IJCAI ’25). 3153–3161.
+
+365   [15] Qidong Liu, Xian Wu, Wanyu Wang, Yejing Wang, Yuanshao Zhu, Xiangyu Zhao, Feng Tian,
+366        and Yefeng Zheng. 2025. LLMEmb: Large language model can be a good embedding generator
+367        for sequential recommendation. In Proceedings of the AAAI Conference on Artificial Intelligence
+368        (AAAI ’25).
+
+369   [16] Ke Wang, Ji Zhang, and Kuan Liu. 2025. Enhancing cross-domain recommendation with plug-in
+370        contrastive representations from large language models. In Proceedings of the 48th International
+371        ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR ’25).
+372        ACM.
+
+373   [17] Yuhao Wang, Junwei Pan, Pengyue Jia, Wanyu Wang, Maolin Wang, Zhixiang Feng, Xiaotian
+374        Li, Jie Jiang, and Xiangyu Zhao. 2025. Pre-train, align, and disentangle: Empowering sequential
+375        recommendation with large language models. In Proceedings of the 48th International ACM
+376        SIGIR Conference on Research and Development in Information Retrieval (SIGIR ’25). ACM.
+
+377   [18] Zhiyu Liao, Xujiang Zhao, Le Wu, Jingjing Li, Xing Xie, and Peng Cui. 2024. LLaRA: Large
+378        language-recommendation assistant. In Proceedings of the 47th International ACM SIGIR
+379        Conference on Research and Development in Information Retrieval (SIGIR ’24). ACM.
+
+380   [19] Sein Kim, Hongseok Kang, Seungyoon Choi, Donghyun Kim, Minchul Yang, and Chany-
+381        oung Park. 2024. Large language models meet collaborative filtering: An efficient all-round
+382        LLM-based recommender system. In Proceedings of the 30th ACM SIGKDD Conference on
+383        Knowledge Discovery and Data Mining (KDD ’24). ACM.
+
+384   [20] Junda Wu, Cheng-Chun Chang, Tong Yu, Zhankui He, Jianing Wang, Yupeng Hou, and Julian
+385        McAuley. 2024. Coral: Collaborative retrieval-augmented large language models improve
+386        long-tail recommendation. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge
+387        Discovery and Data Mining (KDD ’24). ACM, 3391–3401.
+
+388   [21] Xubin Ren, Wei Wei, Lianghao Xia, Lixin Su, Suqi Cheng, Junfeng Wang, Dawei Yin, and
+389        Chao Huang. 2024. Representation learning with large language models for recommendation.
+390        In Proceedings of the ACM Web Conference 2024 (WWW ’24). ACM, 3461–3472.
+
+391   [22] Shenghao Yang, Weizhi Ma, Peijie Sun, Qingyao Ai, Yiqun Liu, Mingchen Cai, and Min
+392        Zhang. 2024. Sequential recommendation with latent relations based on large language model.
+393        In Proceedings of the 47th International ACM SIGIR Conference on Research and Development
+394        in Information Retrieval (SIGIR ’24). ACM.
+
+395   [23] Zhi Zheng, Wenshuo Chao, Zhaopeng Qiu, Hengshu Zhu, and Hui Xiong. 2024. Harnessing
+396        large language models for text-rich sequential recommendation. In Proceedings of the ACM
+397        Web Conference 2024 (WWW ’24). ACM, 3207–3216.
+
+398   [24] Xiaolong Xu, Hongsheng Dong, Lianyong Qi, Xuyun Zhang, Haolong Xiang, Xiaoyu Xia,
+399        Yanwei Xu, and Wanchun Dou. 2024. CMCLRec: Cross-modal Contrastive Learning for
+400        User Cold-start Sequential Recommendation. In Proceedings of the 47th International ACM
+401        SIGIR Conference on Research and Development in Information Retrieval (SIGIR ’24). ACM,
+402        1589–1598.
+
+403   [25] Qidong Liu, Xian Wu, Yejing Wang, Zijian Zhang, Feng Tian, Yefeng Zheng, and Xiangyu
+404        Zhao. 2024. LLM-ESR: Large language models enhancement for long-tailed sequential recom-
+405        mendation. In Advances in Neural Information Processing Systems 38 (NeurIPS ’24).
+
+406   [26] Xiuyuan Qin, Huanhuan Yuan, Pengpeng Zhao, Junhua Fang, Fuzhen Zhuang, Guanfeng Liu,
+407        Yanchi Liu, and Victor S. Sheng. 2023. Meta-optimized Contrastive Learning for Sequential
+408        Recommendation. In Proceedings of the 46th International ACM SIGIR Conference on Research
+409        and Development in Information Retrieval (SIGIR ’23). ACM, 89–98.
+
+
+                                                       11
+410   [27] Kun Zhou, Hui Wang, Wayne Xin Zhao, and Ji-Rong Wen. 2022. Filter-enhanced MLP is all
+411        you need for sequential recommendation. In Proceedings of the ACM Web Conference 2022
+412        (WWW ’22). ACM, 2388–2399.
+413   [28] Yongjun Chen, Zhiwei Liu, Jia Li, Julian McAuley, and Caiming Xiong. 2022. Intent contrastive
+414        learning for sequential recommendation. In Proceedings of the ACM Web Conference 2022
+415        (WWW ’22). ACM, 2172–2182.
+416   [29] Steffen Rendle, Christoph Freudenthaler, and Lars Schmidt-Thieme. 2010. Factorizing person-
+417        alized Markov chains for next-basket recommendation. In Proceedings of the 19th International
+418        Conference on World Wide Web (WWW ’10). ACM, 811–820.
+419   [30] Tongzhou Wang and Phillip Isola. 2020. Understanding contrastive representation learning
+420        through alignment and uniformity on the hypersphere. In Proceedings of the 37th International
+421        Conference on Machine Learning (ICML ’20). PMLR, 9929–9939.
+422   [31] Balázs Hidasi, Alexandros Karatzoglou, Linas Baltrunas, and Domonkos Tikk. 2016. Session-
+423        based recommendations with recurrent neural networks. In Proceedings of the 4th International
+424        Conference on Learning Representations (ICLR ’16).
+425   [32] Jianghao Lin, Xinyi Dai, Yunjia Xi, Weiwen Liu, Bo Chen, Hao Zhang, Yong Liu, Chuhan
+426        Wu, Xiangyang Li, Chenxu Zhu, Huifeng Guo, Yong Yu, Ruiming Tang, and Weinan Zhang.
+427        2025. How can recommender systems benefit from large language models: A survey. ACM
+428        Transactions on Information Systems 43, 2 (2025), Article 28.
+429   [33] Shuai Zhang, Keqin Bao, Yang Zhang, Yunxin Hu, Fuli Feng, Xiangnan He, and Xiang
+430        Wang. 2025. CoLLM: Integrating collaborative embeddings into large language models for
+431        recommendation. IEEE Transactions on Knowledge and Data Engineering 37, 2 (2025), 1037–
+432        1051.
+433   [34] Xiaolong Xu, Hongsheng Dong, Haolong Xiang, Xiyuan Hu, Xiaoyong Li, Xiaoyu Xia, Xuyun
+434        Zhang, Lianyong Qi, and Wanchun Dou. 2025. C2lRec: Causal Contrastive Learning for User
+435        Cold-start Recommendation with Social Variables. ACM Transactions on Information Systems
+436        43, 6 (2025), 143:1–143:28.
+437   [35] Fei Sun, Jun Liu, Jian Wu, Changhua Pei, Xiao Lin, Wenwu Ou, and Peng Jiang. 2019.
+438        BERT4Rec: Sequential recommendation with bidirectional encoder representations from trans-
+439        former. In Proceedings of the 28th ACM International Conference on Information and Knowl-
+440        edge Management (CIKM ’19). ACM.
+441   [36] Wang-Cheng Kang and Julian McAuley. 2018. Self-attentive sequential recommendation. In
+442        Proceedings of the 18th IEEE International Conference on Data Mining (ICDM ’18). IEEE.
+443   [37] Fajie Yuan, Xiangnan He, Alexandros Karatzoglou, and Lizi Zhang. 2019. A simple convolu-
+444        tional generative network for next item recommendation. In Proceedings of the Twelfth ACM
+445        International Conference on Web Search and Data Mining (WSDM ’19). ACM.
+446   [38] Keqin Bao, Jizhi Zhang, Yang Zhang, Wenjie Wang, Fuli Feng, and Xiangnan He. 2023.
+447        TALLRec: An effective and efficient tuning framework to align large language model with
+448        recommendation. In Proceedings of the 17th ACM Conference on Recommender Systems
+449        (RecSys ’23). ACM.
+450   [39] Bowen Zheng, Yupeng Hou, Hongyu Lu, Yu Chen, Wayne Xin Zhao, Ming Chen, and Ji-
+451        Rong Wen. 2024. Adapting large language models by integrating collaborative semantics
+452        for recommendation. In Proceedings of the 40th IEEE International Conference on Data
+453        Engineering (ICDE ’24). IEEE, 1435–1448.
+454   [40] Thomas M. Cover and Joy A. Thomas. 2006. Elements of Information Theory, 2nd edition.
+455        Wiley.
+456   [41] Imre Csiszár. 1967. Information-type measures of difference of probability distributions and
+457        indirect observations. Studia Scientiarum Mathematicarum Hungarica 2 (1967), 299–318.
+458   [42] Zhe Zhao, Wei Fan, Junhao Li, Yuyang Liu, Xing Mei, Yongfeng Wang, Zhiqi Wen, Feng Wang,
+459        Xiangyu Zhao, Ji-Rong Wen, et al. 2024. Recommender systems in the era of large language
+460        models (LLMs). IEEE Transactions on Knowledge and Data Engineering (2024). To appear.
+
+
+                                                     12
+461   NeurIPS Paper Checklist
+462   The checklist is designed to encourage best practices for responsible machine learning research,
+463   addressing issues of reproducibility, transparency, research ethics, and societal impact. Do not remove
+464   the checklist: The papers not including the checklist will be desk rejected. The checklist should
+465   follow the references and follow the (optional) supplemental material. The checklist does NOT count
+466   towards the page limit.
+467   Please read the checklist guidelines carefully for information on how to answer these questions. For
+468   each question in the checklist:
+
+469          • You should answer [Yes], [No], or [N/A].
+470          • [N/A] means either that the question is Not Applicable for that particular paper or the
+471            relevant information is Not Available.
+472          • Please provide a short (1–2 sentence) justification right after your answer (even for [N/A]).
+
+473   The checklist answers are an integral part of your paper submission. They are visible to the
+474   reviewers, area chairs, senior area chairs, and ethics reviewers. You will also be asked to include it
+475   (after eventual revisions) with the final version of your paper, and its final version will be published
+476   with the paper.
+477   The reviewers of your paper will be asked to use the checklist as one of the factors in their evaluation.
+478   While [Yes] is generally preferable to [No], it is perfectly acceptable to answer [No] provided a
+479   proper justification is given (e.g., error bars are not reported because it would be too computationally
+480   expensive” or “we were unable to find the license for the dataset we used”). In general, answering
+481   [No] or [N/A] is not grounds for rejection. While the questions are phrased in a binary way, we
+482   acknowledge that the true answer is often more nuanced, so please just use your best judgment and
+483   write a justification to elaborate. All supporting evidence can appear either in the main paper or the
+484   supplemental material, provided in appendix. If you answer [Yes] to a question, in the justification
+485   please point to the section(s) where related material for the question can be found.
+486   IMPORTANT, please:
+
+487          • Delete this instruction block, but keep the section heading “NeurIPS Paper Checklist",
+488          • Keep the checklist subsection headings, questions/answers and guidelines below.
+489          • Do not modify the questions and only use the provided macros for your answers.
+
+490         1. Claims
+491            Question: Do the main claims made in the abstract and introduction accurately reflect the
+492            paper’s contributions and scope?
+493            Answer: [TODO]
+494            Justification: [TODO]
+495            Guidelines:
+496               • The answer [N/A] means that the abstract and introduction do not include the claims
+497                  made in the paper.
+498               • The abstract and/or introduction should clearly state the claims made, including the
+499                  contributions made in the paper and important assumptions and limitations. A [No] or
+500                  [N/A] answer to this question will not be perceived well by the reviewers.
+501               • The claims made should match theoretical and experimental results, and reflect how
+502                  much the results can be expected to generalize to other settings.
+503               • It is fine to include aspirational goals as motivation as long as it is clear that these goals
+504                  are not attained by the paper.
+505         2. Limitations
+506            Question: Does the paper discuss the limitations of the work performed by the authors?
+507            Answer: [TODO]
+508            Justification: [TODO]
+
+
+                                                          13
+509     Guidelines:
+510        • The answer [N/A] means that the paper has no limitation while the answer [No] means
+511          that the paper has limitations, but those are not discussed in the paper.
+512        • The authors are encouraged to create a separate “Limitations” section in their paper.
+513        • The paper should point out any strong assumptions and how robust the results are to
+514          violations of these assumptions (e.g., independence assumptions, noiseless settings,
+515          model well-specification, asymptotic approximations only holding locally). The authors
+516          should reflect on how these assumptions might be violated in practice and what the
+517          implications would be.
+518        • The authors should reflect on the scope of the claims made, e.g., if the approach was
+519          only tested on a few datasets or with a few runs. In general, empirical results often
+520          depend on implicit assumptions, which should be articulated.
+521        • The authors should reflect on the factors that influence the performance of the approach.
+522          For example, a facial recognition algorithm may perform poorly when image resolution
+523          is low or images are taken in low lighting. Or a speech-to-text system might not be
+524          used reliably to provide closed captions for online lectures because it fails to handle
+525          technical jargon.
+526        • The authors should discuss the computational efficiency of the proposed algorithms
+527          and how they scale with dataset size.
+528        • If applicable, the authors should discuss possible limitations of their approach to
+529          address problems of privacy and fairness.
+530        • While the authors might fear that complete honesty about limitations might be used by
+531          reviewers as grounds for rejection, a worse outcome might be that reviewers discover
+532          limitations that aren’t acknowledged in the paper. The authors should use their best
+533          judgment and recognize that individual actions in favor of transparency play an impor-
+534          tant role in developing norms that preserve the integrity of the community. Reviewers
+535          will be specifically instructed to not penalize honesty concerning limitations.
+536   3. Theory assumptions and proofs
+537     Question: For each theoretical result, does the paper provide the full set of assumptions and
+538     a complete (and correct) proof?
+539     Answer: [TODO]
+540     Justification: [TODO]
+541     Guidelines:
+542        • The answer [N/A] means that the paper does not include theoretical results.
+543        • All the theorems, formulas, and proofs in the paper should be numbered and cross-
+544          referenced.
+545        • All assumptions should be clearly stated or referenced in the statement of any theorems.
+546        • The proofs can either appear in the main paper or the supplemental material, but if
+547          they appear in the supplemental material, the authors are encouraged to provide a short
+548          proof sketch to provide intuition.
+549        • Inversely, any informal proof provided in the core of the paper should be complemented
+550          by formal proofs provided in appendix or supplemental material.
+551        • Theorems and Lemmas that the proof relies upon should be properly referenced.
+552   4. Experimental result reproducibility
+553     Question: Does the paper fully disclose all the information needed to reproduce the main ex-
+554     perimental results of the paper to the extent that it affects the main claims and/or conclusions
+555     of the paper (regardless of whether the code and data are provided or not)?
+556     Answer: [TODO]
+557     Justification: [TODO]
+558     Guidelines:
+559        • The answer [N/A] means that the paper does not include experiments.
+
+
+                                                 14
+560        • If the paper includes experiments, a [No] answer to this question will not be perceived
+561          well by the reviewers: Making the paper reproducible is important, regardless of
+562          whether the code and data are provided or not.
+563        • If the contribution is a dataset and/or model, the authors should describe the steps taken
+564          to make their results reproducible or verifiable.
+565        • Depending on the contribution, reproducibility can be accomplished in various ways.
+566          For example, if the contribution is a novel architecture, describing the architecture fully
+567          might suffice, or if the contribution is a specific model and empirical evaluation, it may
+568          be necessary to either make it possible for others to replicate the model with the same
+569          dataset, or provide access to the model. In general. releasing code and data is often
+570          one good way to accomplish this, but reproducibility can also be provided via detailed
+571          instructions for how to replicate the results, access to a hosted model (e.g., in the case
+572          of a large language model), releasing of a model checkpoint, or other means that are
+573          appropriate to the research performed.
+574        • While NeurIPS does not require releasing code, the conference does require all submis-
+575          sions to provide some reasonable avenue for reproducibility, which may depend on the
+576          nature of the contribution. For example
+577          (a) If the contribution is primarily a new algorithm, the paper should make it clear how
+578               to reproduce that algorithm.
+579          (b) If the contribution is primarily a new model architecture, the paper should describe
+580               the architecture clearly and fully.
+581          (c) If the contribution is a new model (e.g., a large language model), then there should
+582               either be a way to access this model for reproducing the results or a way to reproduce
+583               the model (e.g., with an open-source dataset or instructions for how to construct
+584               the dataset).
+585          (d) We recognize that reproducibility may be tricky in some cases, in which case
+586               authors are welcome to describe the particular way they provide for reproducibility.
+587               In the case of closed-source models, it may be that access to the model is limited in
+588               some way (e.g., to registered users), but it should be possible for other researchers
+589               to have some path to reproducing or verifying the results.
+590   5. Open access to data and code
+591     Question: Does the paper provide open access to the data and code, with sufficient instruc-
+592     tions to faithfully reproduce the main experimental results, as described in supplemental
+593     material?
+594     Answer: [TODO]
+595     Justification: [TODO]
+596     Guidelines:
+597        • The answer [N/A] means that paper does not include experiments requiring code.
+598        • Please see the NeurIPS code and data submission guidelines (https://neurips.cc/
+599          public/guides/CodeSubmissionPolicy) for more details.
+600        • While we encourage the release of code and data, we understand that this might not
+601          be possible, so [No] is an acceptable answer. Papers cannot be rejected simply for not
+602          including code, unless this is central to the contribution (e.g., for a new open-source
+603          benchmark).
+604        • The instructions should contain the exact command and environment needed to run to
+605          reproduce the results. See the NeurIPS code and data submission guidelines (https:
+606          //neurips.cc/public/guides/CodeSubmissionPolicy) for more details.
+607        • The authors should provide instructions on data access and preparation, including how
+608          to access the raw data, preprocessed data, intermediate data, and generated data, etc.
+609        • The authors should provide scripts to reproduce all experimental results for the new
+610          proposed method and baselines. If only a subset of experiments are reproducible, they
+611          should state which ones are omitted from the script and why.
+612        • At submission time, to preserve anonymity, the authors should release anonymized
+613          versions (if applicable).
+
+
+                                                 15
+614         • Providing as much information as possible in supplemental material (appended to the
+615            paper) is recommended, but including URLs to data and code is permitted.
+616   6. Experimental setting/details
+617      Question: Does the paper specify all the training and test details (e.g., data splits, hyperpa-
+618      rameters, how they were chosen, type of optimizer) necessary to understand the results?
+619      Answer: [TODO]
+620      Justification: [TODO]
+621      Guidelines:
+622         • The answer [N/A] means that the paper does not include experiments.
+623         • The experimental setting should be presented in the core of the paper to a level of detail
+624            that is necessary to appreciate the results and make sense of them.
+625         • The full details can be provided either with the code, in appendix, or as supplemental
+626            material.
+627   7. Experiment statistical significance
+628      Question: Does the paper report error bars suitably and correctly defined or other appropriate
+629      information about the statistical significance of the experiments?
+630      Answer: [TODO]
+631      Justification: [TODO]
+632      Guidelines:
+633         • The answer [N/A] means that the paper does not include experiments.
+634         • The authors should answer [Yes] if the results are accompanied by error bars, confidence
+635            intervals, or statistical significance tests, at least for the experiments that support the
+636            main claims of the paper.
+637         • The factors of variability that the error bars are capturing should be clearly stated (for
+638            example, train/test split, initialization, random drawing of some parameter, or overall
+639            run with given experimental conditions).
+640         • The method for calculating the error bars should be explained (closed form formula,
+641            call to a library function, bootstrap, etc.)
+642         • The assumptions made should be given (e.g., Normally distributed errors).
+643         • It should be clear whether the error bar is the standard deviation or the standard error
+644            of the mean.
+645         • It is OK to report 1-sigma error bars, but one should state it. The authors should
+646            preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis
+647            of Normality of errors is not verified.
+648         • For asymmetric distributions, the authors should be careful not to show in tables or
+649            figures symmetric error bars that would yield results that are out of range (e.g., negative
+650            error rates).
+651         • If error bars are reported in tables or plots, the authors should explain in the text how
+652            they were calculated and reference the corresponding figures or tables in the text.
+653   8. Experiments compute resources
+654      Question: For each experiment, does the paper provide sufficient information on the com-
+655      puter resources (type of compute workers, memory, time of execution) needed to reproduce
+656      the experiments?
+657      Answer: [TODO]
+658      Justification: [TODO]
+659      Guidelines:
+660         • The answer [N/A] means that the paper does not include experiments.
+661         • The paper should indicate the type of compute workers CPU or GPU, internal cluster,
+662            or cloud provider, including relevant memory and storage.
+663         • The paper should provide the amount of compute required for each of the individual
+664            experimental runs as well as estimate the total compute.
+
+
+                                                   16
+665         • The paper should disclose whether the full research project required more compute
+666           than the experiments reported in the paper (e.g., preliminary or failed experiments that
+667           didn’t make it into the paper).
+668    9. Code of ethics
+669      Question: Does the research conducted in the paper conform, in every respect, with the
+670      NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines?
+671      Answer: [TODO]
+672      Justification: [TODO]
+673      Guidelines:
+674         • The answer [N/A] means that the authors have not reviewed the NeurIPS Code of
+675           Ethics.
+676         • If the authors answer [No], they should explain the special circumstances that require a
+677           deviation from the Code of Ethics.
+678         • The authors should make sure to preserve anonymity (e.g., if there is a special consid-
+679           eration due to laws or regulations in their jurisdiction).
+680   10. Broader impacts
+681      Question: Does the paper discuss both potential positive societal impacts and negative
+682      societal impacts of the work performed?
+683      Answer: [TODO]
+684      Justification: [TODO]
+685      Guidelines:
+686         • The answer [N/A] means that there is no societal impact of the work performed.
+687         • If the authors answer [N/A] or [No], they should explain why their work has no societal
+688           impact or why the paper does not address societal impact.
+689         • Examples of negative societal impacts include potential malicious or unintended uses
+690           (e.g., disinformation, generating fake profiles, surveillance), fairness considerations
+691           (e.g., deployment of technologies that could make decisions that unfairly impact specific
+692           groups), privacy considerations, and security considerations.
+693         • The conference expects that many papers will be foundational research and not tied
+694           to particular applications, let alone deployments. However, if there is a direct path to
+695           any negative applications, the authors should point it out. For example, it is legitimate
+696           to point out that an improvement in the quality of generative models could be used to
+697           generate Deepfakes for disinformation. On the other hand, it is not needed to point out
+698           that a generic algorithm for optimizing neural networks could enable people to train
+699           models that generate Deepfakes faster.
+700         • The authors should consider possible harms that could arise when the technology is
+701           being used as intended and functioning correctly, harms that could arise when the
+702           technology is being used as intended but gives incorrect results, and harms following
+703           from (intentional or unintentional) misuse of the technology.
+704         • If there are negative societal impacts, the authors could also discuss possible mitigation
+705           strategies (e.g., gated release of models, providing defenses in addition to attacks,
+706           mechanisms for monitoring misuse, mechanisms to monitor how a system learns from
+707           feedback over time, improving the efficiency and accessibility of ML).
+708   11. Safeguards
+709      Question: Does the paper describe safeguards that have been put in place for responsible
+710      release of data or models that have a high risk for misuse (e.g., pre-trained language models,
+711      image generators, or scraped datasets)?
+712      Answer: [TODO]
+713      Justification: [TODO]
+714      Guidelines:
+715         • The answer [N/A] means that the paper poses no such risks.
+
+
+                                                  17
+716          • Released models that have a high risk for misuse or dual-use should be released with
+717            necessary safeguards to allow for controlled use of the model, for example by requiring
+718            that users adhere to usage guidelines or restrictions to access the model or implementing
+719            safety filters.
+720          • Datasets that have been scraped from the Internet could pose safety risks. The authors
+721            should describe how they avoided releasing unsafe images.
+722          • We recognize that providing effective safeguards is challenging, and many papers do
+723            not require this, but we encourage authors to take this into account and make a best
+724            faith effort.
+725   12. Licenses for existing assets
+726       Question: Are the creators or original owners of assets (e.g., code, data, models), used in
+727       the paper, properly credited and are the license and terms of use explicitly mentioned and
+728       properly respected?
+729       Answer: [TODO]
+730       Justification: [TODO]
+731       Guidelines:
+732          • The answer [N/A] means that the paper does not use existing assets.
+733          • The authors should cite the original paper that produced the code package or dataset.
+734          • The authors should state which version of the asset is used and, if possible, include a
+735            URL.
+736          • The name of the license (e.g., CC-BY 4.0) should be included for each asset.
+737          • For scraped data from a particular source (e.g., website), the copyright and terms of
+738            service of that source should be provided.
+739          • If assets are released, the license, copyright information, and terms of use in the
+740            package should be provided. For popular datasets, paperswithcode.com/datasets
+741            has curated licenses for some datasets. Their licensing guide can help determine the
+742            license of a dataset.
+743          • For existing datasets that are re-packaged, both the original license and the license of
+744            the derived asset (if it has changed) should be provided.
+745          • If this information is not available online, the authors are encouraged to reach out to
+746            the asset’s creators.
+747   13. New assets
+748       Question: Are new assets introduced in the paper well documented and is the documentation
+749       provided alongside the assets?
+750       Answer: [TODO]
+751       Justification: [TODO]
+752       Guidelines:
+753          • The answer [N/A] means that the paper does not release new assets.
+754          • Researchers should communicate the details of the dataset/code/model as part of their
+755            submissions via structured templates. This includes details about training, license,
+756            limitations, etc.
+757          • The paper should discuss whether and how consent was obtained from people whose
+758            asset is used.
+759          • At submission time, remember to anonymize your assets (if applicable). You can either
+760            create an anonymized URL or include an anonymized zip file.
+761   14. Crowdsourcing and research with human subjects
+762       Question: For crowdsourcing experiments and research with human subjects, does the paper
+763       include the full text of instructions given to participants and screenshots, if applicable, as
+764       well as details about compensation (if any)?
+765       Answer: [TODO]
+766       Justification: [TODO]
+
+
+                                                   18
+767           Guidelines:
+768              • The answer [N/A] means that the paper does not involve crowdsourcing nor research
+769                 with human subjects.
+770              • Including this information in the supplemental material is fine, but if the main contribu-
+771                 tion of the paper involves human subjects, then as much detail as possible should be
+772                 included in the main paper.
+773              • According to the NeurIPS Code of Ethics, workers involved in data collection, curation,
+774                 or other labor should be paid at least the minimum wage in the country of the data
+775                 collector.
+776       15. Institutional review board (IRB) approvals or equivalent for research with human
+777           subjects
+778           Question: Does the paper describe potential risks incurred by study participants, whether
+779           such risks were disclosed to the subjects, and whether Institutional Review Board (IRB)
+780           approvals (or an equivalent approval/review based on the requirements of your country or
+781           institution) were obtained?
+782           Answer: [TODO]
+783           Justification: [TODO]
+784           Guidelines:
+785              • The answer [N/A] means that the paper does not involve crowdsourcing nor research
+786                 with human subjects.
+787              • Depending on the country in which research is conducted, IRB approval (or equivalent)
+788                 may be required for any human subjects research. If you obtained IRB approval, you
+789                 should clearly state this in the paper.
+790              • We recognize that the procedures for this may vary significantly between institutions
+791                 and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the
+792                 guidelines for their institution.
+793              • For initial submissions, do not include any information that would break anonymity (if
+794                 applicable), such as the institution conducting the review.
+795       16. Declaration of LLM usage
+796           Question: Does the paper describe the usage of LLMs if it is an important, original, or
+797           non-standard component of the core methods in this research? Note that if the LLM is used
+798           only for writing, editing, or formatting purposes and does not impact the core methodology,
+799           scientific rigor, or originality of the research, declaration is not required.
+800           Answer: [TODO]
+801           Justification: [TODO]
+802           Guidelines:
+803              • The answer [N/A] means that the core method development in this research does not
+804                 involve LLMs as any important, original, or non-standard components.
+805              • Please refer to our LLM policy in the NeurIPS handbook for what should or should not
+806                 be described.
+
+807   A    Theoretical Analysis: Information-Theoretic SSHG and Sequence
+808        Retention
+809   To formalize the intended mechanism of EchoRec, we analyze cross-space transfer through local
+810   neighborhood distributions. Our goal is not to claim a universal law for arbitrary transfer systems, but
+811   to provide an information-theoretic mechanism theorem for local sequence retention under a shared
+812   neighborhood view.
+
+
+
+
+                                                        19
+813   A.1   Distributional Setup
+
+814   For each user u, let NuK denote a shared candidate pool of size K. We emphasize that NuK is not
+815   constructed independently in each space as separate hard top-K sets; instead, it is a pre-fixed shared
+816   candidate pool over which all neighborhood distributions are defined.
+817   For each space a ∈ {sem, seq, llm}, let sau (v) denote the neighborhood score assigned to candidate
+818   v ∈ NuK . We define the corresponding soft neighborhood distribution by:
+                                         exp(sau (v)/τ )
+                        pau (v) = P                 a ′
+                                                             ,     a ∈ {sem, seq, llm},              (16)
+                                    v ′ ∈N K exp(su (v )/τ )
+                                            u
+
+819   where pau (v) is the probability assigned to candidate v for user u in space a, sau (v) is the corresponding
+820   neighborhood score, and τ > 0 is the softmax temperature. Thus, psem          seq          llm
+                                                                              u , pu , and pu are all strictly
+                                                      K                         sem
+821   positive distributions on the same support Nu . The semantic score su (v) is induced by the frozen
+822   LLM semantic assets. On the LLM side, sllm      u (j) is instantiated by the Stage-II retrieval score in
+823   Eq. (12); on the teacher side, ssequ (v) denotes the enhanced teacher-induced candidate score over
+824   the same shared pool. Throughout this appendix, we assume the score functions are normalized or
+825   temperature-calibrated so that local score distortion is meaningful across spaces. This calibration is
+826   only used for the theoretical comparison of local soft-neighborhood distributions; it does not imply
+827   that the raw teacher and semantic scores are numerically identical in implementation.
+828   We define the total variation distance by:
+                                                         1
+                                                           ∥p − q∥1 ,
+                                                T V (p, q) :=                                            (17)
+                                                         2
+829   where p and q are distributions defined on the same support. The quantity of primary interest is the
+830   sequence-retention error below:
+                                          Eret (u) := T V (pseq  llm
+                                                            u , pu ),                                    (18)
+831   which measures how much of the teacher-side local sequential structure is lost after injection into the
+832   hosted LLM representation.
+833   For the alignment term, we define the first-order alignment magnitude:
+                                                     1 X
+                                       Ealign :=            ∥uu − tu ∥2 ,                                    (19)
+                                                    |U|
+                                                           u∈U
+834   where uu and tu are the normalized LLM-side and teacher-side user representations in the shared
+835   retrieval subspace used by Eq. (12) and Eq. (14). In practice, the optimized objective uses the
+836   squared-distance penalty below:
+                                                 1 X
+                                      Lalign :=         ∥uu − tu ∥22 .                           (20)
+                                                |U|
+                                                           u∈U
+837   By Jensen’s inequality, or equivalently Cauchy–Schwarz:
+                                                      p
+                                              Ealign ≤ Lalign .                                   (21)
+838   Hence, suppressing the squared-distance component in the practical objective also suppresses the
+839   alignment term appearing in the theorem below.
+
+840   A.2   Information-Theoretic Definition of SSHG
+
+841   We now instantiate SSHG through local soft-neighborhood distributions following standard
+842   information-theoretic notation [40].
+843   Definition A.1 (Information-Theoretic SSHG). For a user u, we define the information-theoretic
+844   SSHG by:
+                            Su := DKL (pseq    sem      seq sem          seq
+                                           u ∥pu ) = H(pu , pu ) − H(pu ),                      (22)
+845   Here DKL (·∥·) is the Kullback–Leibler divergence, H(p, q) is cross-entropy, and H(p) is entropy.
+846   Thus, Su measures the extra coding cost incurred when the frozen semantic neighborhood distribution
+847   is used to encode the teacher-side sequential neighborhood structure. We use DKL (pseq       sem
+                                                                                             u ∥pu ) rather
+848   than the reverse direction because pseq
+                                            u   is the teacher-side structure to be  transferred,  while  psem
+                                                                                                           u
+849   serves as the frozen semantic reference code. Other symmetric divergences could also be used for
+850   diagnosis, but KL gives a direct coding interpretation and connects naturally to total variation through
+851   Pinsker-type inequalities [40, 41].
+
+
+                                                           20
+852   A.3    Structural Assumptions
+
+853   We keep only the assumptions needed to map user representations to local neighborhood distributions
+854   and to control injection-time drift.
+855   Assumption A.1 (Teacher-side and LLM-side local decision rules). For each user u, there exist two
+856   local distribution maps:
+                                      Φseq d  K
+                                       u :R →∆ ,                    Φllm
+                                                                     u   : Rd → ∆K ,                          (23)
+                K
+857   where ∆ denotes the probability simplex over the shared pool of K candidates, and d is the
+858   dimensionality of the shared retrieval subspace, such that:
+                                      pseq  seq
+                                       u = Φu (tu ),               pllm
+                                                                    u   = Φllm
+                                                                           u (uu ).                           (24)
+859   Here Φseq                                                       llm
+             u describes the teacher-side local decision rule, while Φu   describes the injected LLM-side
+860   local decision rule.
+861   Assumption A.2 (Injection-time Lipschitz stability). The LLM-side local decision map is CΦ -
+862   Lipschitz with respect to the user representation:
+                                           ′               ′
+                            ∥Φllm      llm
+                              u (h) − Φu (h )∥1 ≤ CΦ ∥h − h ∥2 ,                   ∀h, h′ ∈ Rd ,              (25)
+863   where CΦ > 0 is the Lipschitz constant of the LLM-side local decision map. This states that if
+864   Stage II keeps the injected LLM representation close to the teacher representation, then the induced
+865   LLM-side neighborhood distribution will not drift excessively.
+
+866   A.4    Two-Level Instantiation of SSHG under SACP
+
+867   The unified SSHG term in the retention theorem summarizes the mismatch between the teacher-
+868   side sequential neighborhood and the frozen semantic reference. Under SACP, this mismatch is
+869   operationally targeted through two controllable components, corresponding to the two semantic
+870   contrastive branches in Stage I.
+
+871   Item-level semantic metric mismatch. For each item i, let NiK denote a shared item candidate
+872   pool. We define:
+                                 exp(ssem (j)/τi )                                  exp(sseq
+                                                                                         i (j)/τi )
+             psem
+              i   (j) = P             i
+                                           sem (j ′ )/τ ) ,        pseq
+                                                                    i (j) = P                seq ′       ,    (26)
+                            j ′ ∈N K exp(si
+                                 i
+                                                       i                       j ′ ∈N K exp(si (j )/τi )
+                                                                                     i
+
+873   where ssem
+              i   (j) is the frozen semantic score between item i and candidate item j, sseq  i (j) is the
+874   teacher-side item score after SACP, τi > 0 is the item-level temperature, and NiK is the shared item
+875   candidate pool. The item-level SSHG is:
+                                                                        1 X item
+                          Siitem := DKL (pseq
+                                           i ∥pi
+                                                sem
+                                                     ),     Suitem :=           Si    ,                (27)
+                                                                      |Su |
+                                                                                    i∈Su
+
+876   where Siitem is the item-level KL mismatch for item i, and Suitem is its sequence-level average for
+877   user u. This term captures local semantic metric mismatch, which is targeted by the item-level
+878   semantic perturbation branch.
+
+879   User-level semantic-neighborhood fragmentation. For each user u, let MK
+                                                                            u denote a shared user
+880   or sequence candidate pool. We define:
+                              exp(asem
+                                   u (v)/τu )                                        exp(aseq
+                                                                                          u (v)/τu )
+            qusem (v) = P                          ,               quseq (v) = P                          ,   (28)
+                         v ′ ∈MKu
+                                  exp(asem  ′
+                                       u (v )/τu )                              v ′ ∈MKu
+                                                                                         exp(aseq  ′
+                                                                                              u (v )/τu )
+
+881   where asem
+               u (v) is the frozen semantic score between user history u and candidate user or sequence v,
+882   aseq
+        u (v) is the teacher-side user-neighborhood score, τu > 0 is the user-level temperature, and Mu
+                                                                                                       K
+
+883   is the shared user or sequence candidate pool. The user-level SSHG is:
+                                              Suuser := DKL (quseq ∥qusem ),                                  (29)
+884   where Suuser is the user-level KL mismatch for user u. This term captures semantic-neighborhood
+885   topological fragmentation, which is targeted by the user-level semantic-neighborhood contrastive
+886   branch.
+
+
+                                                              21
+887   We summarize the SACP-controllable SSHG proxy as:
+                                               SuSACP := αi Suitem + αu Suuser ,                              (30)
+888   where αi , αu ≥ 0 are nonnegative combination weights. This quantity should be interpreted as an
+889   operational surrogate for the unified SSHG term in the retention theorem, rather than as a claim
+890   that SACP directly minimizes the KL divergence itself. The unified Su in Theorem A.1 is used to
+891   state the retention bound, whereas SuSACP explains how Stage I operationally targets the concrete
+892   item-level and user-level sources of this mismatch. We do not require SuSACP = Su ; rather, SuSACP
+893   is a controllable surrogate for teacher-side reshaping.
+
+894   A.5    SACP as Score-Distortion Surrogates for SSHG
+
+895   To connect SACP with the KL-defined SSHG, we define the local teacher–semantic score distortion:
+                                       ∆u := inf max |sseq      sem
+                                                       u (v) − su (v) − c| ,                                  (31)
+                                                 c∈R v∈NuK
+
+896   where ∆u is the centered local teacher–semantic score distortion for user u, c is a constant score shift,
+897   and NuK is the shared candidate pool.
+898   Lemma A.1 (Score-Distortion Surrogate for SSHG). For every user u, the KL-defined SSHG satisfies:
+                                                                         2∆u
+                                                  DKL (pseq sem
+                                                        u ∥pu ) ≤            .                                (32)
+                                                                          τ
+
+899   Proof. Let c⋆u be a minimizer of Eq. (31), and define s̃sem               sem     ⋆
+                                                                  u (v) := su (v) + cu . Since the softmax
+                                                                            sem
+900   distribution is invariant to adding a constant shift to all scores, s̃u induces the same neighborhood
+901   distribution as ssem             sem                              K
+                        u , namely pu . For any candidate v ∈ Nu , Eq. (31) implies:
+
+                                              −∆u ≤ sseq       sem
+                                                     u (v) − s̃u (v) ≤ ∆u .                                   (33)
+902   Let:                       X                                              X
+                                                    ′                                               ′
+                    Zuseq :=               exp(sseq
+                                                u (v )/τ ),         Zusem :=              exp(s̃sem
+                                                                                                u (v )/τ ).   (34)
+                                v ′ ∈NuK                                       v ′ ∈NuK
+
+903   By Eq. (33), for every v ′ :
+                    e−∆u /τ exp(s̃sem ′             seq ′
+                                  u (v )/τ ) ≤ exp(su (v )/τ ) ≤ e
+                                                                  ∆u /τ
+                                                                        exp(s̃sem ′
+                                                                              u (v )/τ ),                     (35)
+                            ′
+904   and summing over v yields:
+                                            e−∆u /τ Zusem ≤ Zuseq ≤ e∆u /τ Zusem .                            (36)
+905   Therefore:
+                                           pseq
+                                            u (v)   sseq (v) − s̃sem
+                                                                 u (v)         Zuseq
+                                     log    sem
+                                                  = u                   − log sem
+                                           pu (v)            τ                 Zu
+                                                                   
+                                                    ∆u          ∆u      2∆u
+                                                  ≤      − −          =      .                                (37)
+                                                     τ           τ       τ
+906   Taking expectation over v ∼ pseq
+                                   u gives:
+                                                        X                   pseq
+                                                                             u (v)     2∆u
+                                DKL (pseq sem
+                                      u ∥pu ) =                pseq
+                                                                u (v) log            ≤     ,                  (38)
+                                                                            psem
+                                                                             u   (v)    τ
+                                                       v∈NuK
+
+907   which proves Eq. (32).
+
+908   Lemma A.1 does not imply that SACP directly minimizes Su = DKL (pseq               sem
+                                                                                  u ∥pu ). It only shows
+909   that reducing centered local teacher–semantic score distortion is sufficient to reduce an upper bound
+910   on the KL-defined SSHG. This surrogate view is also consistent with the alignment perspective of
+911   contrastive representation learning, where contrastive objectives encourage positive-pair alignment
+912   while maintaining representation dispersion [30].
+
+
+
+                                                               22
+913   Applying the same softmax argument to the two SACP branches gives branch-level surrogate control.
+914   For the item branch, define:
+
+                                                               ¯ item := 1
+                                                                                X
+                 ∆item
+                  i    := inf max |sseq
+                                     i  (j) − ssem
+                                               i   (j) − c| ,  ∆ u                  ∆item
+                                                                                      i    ,      (39)
+                           c∈R j∈NiK                                      |Su |
+                                                                                       i∈Su
+
+915   where ∆item                                                               ¯ item is its sequence-level
+                    is the centered item-level score distortion for item i, and ∆
+               i                                                                  u
+916   average for user u. Then:
+                                                2∆item                      ¯ item
+                                                                           2∆
+                                                  i                           u
+                                     Siitem ≤          ,        Suitem ≤           .                   (40)
+                                                  τi                         τi
+917   For the user branch, define:
+                                 ∆user
+                                  u    := inf max |aseq      sem
+                                                    u (v) − au (v) − c| ,                              (41)
+                                            c∈R v∈MK
+                                                   u
+
+
+918   where ∆user
+             u    is the centered user-level score distortion for user u. Then:
+                                                             2∆user
+                                                                u
+                                                  Suuser ≤          .                                  (42)
+                                                               τu
+919   Therefore:
+                                                   ¯ item
+                                                   ∆ u            ∆user
+                                       SuSACP ≤ 2αi       + 2αu u .                         (43)
+                                                     τi             τu
+920   This shows that the two SACP branches reduce an upper bound on the operational SSHG proxy
+921   whenever they reduce the corresponding local score distortions.
+
+922   A.6   Semantic-Host Residual and Rule Discrepancy
+
+923   To avoid folding all teacher–LLM rule discrepancy into SSHG itself, we explicitly define the host-side
+924   semantic residual. Let:
+                                              phost
+                                                u   := Φllm
+                                                         u (tu ),                                       (44)
+925   where phost
+             u    is the neighborhood distribution induced by feeding the teacher representation tu into
+926   the LLM-side local decision rule Φllm
+                                        u . We then define the semantic-host residual by:
+
+                                            Ru := DKL (psem host
+                                                        u ∥pu    ),                                    (45)
+927   where Ru is the semantic-host residual for user u. This term captures host-specific discrepancy
+928   between the frozen semantic reference and the LLM-side decision rule when the teacher representation
+929   is used as input.
+930   Lemma A.2 (Rule Discrepancy via SSHG and Host Residual). For every user u:
+                                                            p          p
+                                ∥Φseq           llm
+                                    u (tu ) − Φu (tu )∥1 ≤     2Su + 2Ru .                            (46)
+
+931   Proof. By Eq. (24) and Eq. (44):
+                                 ∥Φseq        llm           seq  host
+                                   u (tu ) − Φu (tu )∥1 = ∥pu − pu    ∥1 .                             (47)
+932   Inserting the semantic reference and applying the triangle inequality gives:
+                            ∥pseq  host
+                              u − pu    ∥1 ≤ ∥pseq  sem      sem
+                                               u − pu ∥1 + ∥pu   − phost
+                                                                    u    ∥1 .                          (48)
+933   Pinsker’s inequality [41, 40] implies:
+                                                           p
+                                           ∥p − q∥1 ≤          2DKL (p∥q),                             (49)
+934   for distributions on the same support. Applying it to the two terms in Eq. (48) yields:
+                                q                        q
+                                          seq
+                                                                                 p         p
+           ∥pseq
+              u  −  p host
+                      u    ∥1 ≤  2D    (p
+                                    KL u      ∥p sem ) +
+                                                 u        2DKL (psem
+                                                                  u ∥pu
+                                                                        host ) =   2Su + 2Ru ,         (50)
+
+935   which proves Eq. (46).
+
+
+
+                                                           23
+936   A.7   Information-Theoretic Sequence-Retention Bound
+
+937   Theorem A.1 (Sequence-Retention Upper Bound). Under Assumptions A.1 and A.2, for every user
+938   u:                                       r      r
+                                  seq llm        Su      Ru     CΦ
+                            T V (pu , pu ) ≤        +         +     ∥tu − uu ∥2 .            (51)
+                                                  2        2     2
+939   Averaging over all users gives:
+                                                      r       r
+                             1 X           seq llm      S̄      R̄ CΦ
+                                     T V (pu , pu ) ≤       +      +     Ealign ,            (52)
+                            |U|                         2       2     2
+                                u∈U
+940   where:
+                                              1 X                      1 X
+                                     S̄ :=        Su ,        R̄ :=        Ru ,                      (53)
+                                             |U|                      |U|
+                                               u∈U                      u∈U
+941   where S̄ and R̄ are the user-averaged SSHG and semantic-host residual, respectively. Using Eq. (21),
+942   we further obtain:
+                                                     r      r
+                             1 X          seq llm      S̄      R̄ CΦ p
+                                    T V (pu , pu ) ≤      +       +         Lalign .                 (54)
+                            |U|                        2       2      2
+                               u∈U
+
+
+943   Proof. By Assumptions A.1 and A.2, and by Eq. (24):
+                                     pseq  seq
+                                      u = Φu (tu ),           pllm
+                                                               u   = Φllm
+                                                                      u (uu ).                       (55)
+944   By Eq. (44), we also denote:
+                                                 phost
+                                                  u    = Φllm
+                                                          u (tu ).                                   (56)
+945   Therefore:
+                            ∥pseq  llm      seq        llm
+                              u − pu ∥1 = ∥Φu (tu ) − Φu (uu )∥1
+                                               ≤ ∥pseq  host
+                                                   u − pu    ∥1 + ∥phost
+                                                                    u    − pllm
+                                                                            u ∥1 ,                   (57)
+946   where the inequality follows from the triangle inequality.
+947   The first term is controlled by Lemma A.2:
+                                                          p            p
+                                       ∥pseq  host
+                                         u − pu    ∥1 ≤        2Su +       2Ru .                     (58)
+948   The second term is controlled by Assumption A.2:
+                                        ∥phost
+                                          u    − pllm
+                                                  u ∥1 ≤ CΦ ∥tu − uu ∥2 .                            (59)
+949   Substituting Eqs. (58) and (59) into Eq. (57), we obtain:
+                                                p        p
+                             ∥pseq     llm
+                               u − p u ∥1 ≤       2Su + 2Ru + CΦ ∥tu − uu ∥2 .                       (60)
+950   Using the definition of total variation distance in Eq. (17):
+                                                            r         r
+                         seq llm       1 seq       llm         Su       Ru   CΦ
+                  T V (pu , pu ) = ∥pu − pu ∥1 ≤                    +      +    ∥tu − uu ∥2 ,        (61)
+                                       2                        2        2    2
+951   which proves Eq. (51).
+952   Averaging Eq. (51) over all users yields:
+                                                r             r
+           1 X           seq llm        1 X Su         1 X Ru       CΦ 1 X
+                  T V (pu , pu ) ≤                  +             +    ·        ∥tu − uu ∥2
+          |U|                          |U|        2   |U|       2    2 |U|
+              u∈U                          u∈U            u∈U               u∈U
+                                                r             r
+                                        1 X Su         1 X Ru       CΦ
+                                    =               +             +    Ealign .             (62)
+                                       |U|        2   |U|       2    2
+                                              u∈U               u∈U
+953   By Jensen’s inequality and Eq. (53):
+                                     r       r                         r           r
+                              1 X Su           S̄              1 X         Ru          R̄
+                                           ≤      ,                           ≤           ,          (63)
+                             |U|         2     2              |U|           2          2
+                                 u∈U                             u∈U
+954   which together with Eq. (62) proves Eq. (52). Finally, applying Eq. (21) gives Eq. (54).
+
+
+                                                         24
+                        Table 4: Dataset statistics under the shared benchmark protocol.
+                                   Dataset      Users         Items   Interactions
+                                    Movies      11,947    17,490        144,071
+                                   Scientific   23,627    25,764        266,164
+                                  Electronics   27,601    31,533        292,308
+                                     CDs        18,481    30,951        284,695
+
+
+955   Interpretation. Theorem A.1 decomposes sequence-retention error into three sources. The
+956   first term, Su = DKL (pseq      sem
+                                u ∥pu ), is the information-theoretic SSHG. The second term, Ru =
+               sem  host
+957   DKL (pu ∥pu ), is a semantic-host residual. The third term, ∥tu − uu ∥2 , is injection-time repre-
+958   sentation drift. EchoRec primarily controls the KL-defined SSHG term and the drift term: SACP
+959   lowers a score-distortion surrogate upper-bounding the controllable SSHG term, while SI matching
+960   reduces injection-time drift. The residual term records host-specific mismatch not directly optimized
+961   by EchoRec, rather than hiding it inside a strong compatibility assumption.
+
+962   A.8   Relation to the Main-Text Diagnosis
+
+963   The theoretical quantities above include KL-defined SSHG, semantic-host residual, and TV-type
+964   retention error. In experiments, these continuous distributional quantities are not directly observable
+965   from ranked retrieval outputs. We therefore use PreAlign@20, Jaccard@20, and RBO@20 as
+966   empirical proxies for local structure preservation. These diagnostics should be read as evidence
+967   consistent with the information-theoretic mechanism rather than as direct numerical verification of the
+968   theorem. Because the LLM backbone, candidate pool, and SI architecture are fixed in the controlled
+969   diagnosis, the observed structure-transfer gains remain consistent with the hypothesis that lowering
+970   the controllable SSHG and drift terms improves retention, though the residual term is unmeasured.
+
+971   A.9   Discussion: Perturbation Stability
+
+972   This perturbation discussion should be interpreted as a local stability diagnosis rather than a global
+973   robustness guarantee. The main text shows that EchoRec is more stable under moderate perturbations
+974   such as shuffle and dropping recent interactions. From the same distributional viewpoint used above,
+975   this pattern provides a possible explanation for the observed moderate-perturbation stability: if the
+976   KL-defined SSHG is smaller before injection and the injection-time drift is better controlled, then the
+977   transferred sequential structure may be more coherent under the clean input and less fragile under
+978   moderate perturbations. This discussion is intended only to connect the retention view with the
+979   empirical perturbation results; it is not used as a formal robustness theorem.
+980   At the same time, the fact that EchoRec still changes under reverse should not be read as a contradic-
+981   tion. On the contrary, it suggests that the model still preserves meaningful order sensitivity, rather
+982   than degenerating into a spuriously order-invariant behavior. Full reversal is a strong perturbation
+983   and should not be treated as part of this local regime. We therefore view the perturbation result as
+984   qualitative evidence that cleaner teacher-side structure and better-controlled transfer are associated
+985   with more stable, yet still sequence-sensitive, LLM representations.
+
+986   B     Additional Experimental Settings
+987   B.1   Datasets
+
+988   Following the shared benchmark of Kim et al. [10], we use four five-core Amazon datasets, namely
+989   Movies, Scientific, Electronics, and CDs. Each dataset keeps users and items with at least five
+990   interactions after preprocessing. Table 4 summarizes the benchmark statistics used in this paper.
+
+991   B.2   Baselines
+
+992   We compare against the nine methods that are directly comparable under the shared retrieval protocol.
+
+
+
+                                                         25
+ 993    • GRU4Rec applies recurrent neural networks to model short-range transition dynamics in interac-
+ 994      tion sequences [31].
+ 995    • BERT4Rec adopts a bidirectional Transformer and masked-item prediction to learn context-aware
+ 996      sequence representations [35].
+ 997    • NextItNet is a convolutional autoregressive recommender built on dilated residual blocks for
+ 998      next-item prediction [37].
+ 999    • SASRec employs self-attention to capture the most relevant dependencies in user behavior
+1000      sequences and serves as the vanilla Transformer baseline in our experiments [36].
+1001    • TALLRec adapts the LLM to recommendation mainly through lightweight prompt tuning [38].
+1002    • LLaRA keeps the LLM in the recommendation loop through an assistant-style pipeline that
+1003      organizes recommendation signals via instruction-style interaction [18].
+1004    • A-LLMRec transfers collaborative-filtering signals into the LLM through efficient representation
+1005      alignment between a recommender and the language model [19].
+1006    • CoLLM injects collaborative item embeddings into the LLM so that recommendation-oriented
+1007      inference can use both semantic context and collaborative cues [33].
+1008    • LLM-SRec combines sequence-aware embedding injection with teacher-guided representation
+1009      matching, allowing an online LLM to absorb sequential signals from a pretrained sequential
+1010      recommender more faithfully [10].
+
+1011   These methods together cover conventional sequential modeling, prompt tuning, collaborative align-
+1012   ment, feature injection, and sequential distillation, making them the most relevant baselines in our
+1013   EchoRec evaluation setting.
+
+1014   B.3   Implementation Details
+
+1015   All reported experiments are completed on a workstation equipped with dual NVIDIA GeForce
+1016   RTX 5090 GPUs. We use a LLaMA-3B checkpoint as the frozen LLM host and follow the shared
+1017   benchmark protocol for data splitting, candidate construction, and evaluation. In Table 1, the SASRec
+1018   column denotes the vanilla SASRec baseline, whereas EchoRec uses a Transformer-style sequential
+1019   teacher in its two-stage pipeline. Stage I constructs frozen semantic assets offline with batch size 64
+1020   and keeps Top-K semantic neighbors with K = 10 by default. The SACP teacher is trained with
+1021   batch size 256, test batch size 512, Adam optimizer, and learning rate 10−3 . The default weights
+1022   of the user-level and item-level contrastive terms are λu = 0.1 and λi = 0.1, respectively. Stage
+1023   II freezes both the enhanced teacher and the LLM backbone, and optimizes only the lightweight
+1024   projector, teacher-side mapper, and retrieval heads. Its default training batch size is 20 for Movies,
+1025   Scientific, and CDs, and 16 for Electronics; the inference batch size is 10. We use Adam with
+1026   learning rate 10−4 for SI, and set the teacher-matching weight to 1.0 by default. Hyperparameters
+1027   and checkpoints are selected on the validation set using NDCG@10, while ablations only change the
+1028   component under study. Section 4.6 further validates the model-agnostic nature of EchoRec.
+
+1029   Prompt Templates. For readability, we keep the prompt templates in a compact form and separate
+1030   the asset-construction prompts from the sequence-injection prompts.
+
+1031   B.4   Efficiency and Computational Cost Discussion
+
+1032   EchoRec follows a staged efficiency design. In Stage I, the frozen LLM is used only before teacher
+1033   training to construct item/user semantic embeddings and semantic-neighborhood indices. These assets
+1034   are cached and reused, so the LLM is not repeatedly queried or updated during SACP optimization.
+1035   The additional Stage-I cost mainly comes from semantic-neighborhood lookup, semantic perturbation
+1036   sampling, and the two contrastive losses, all of which are applied to the small sequential teacher
+1037   rather than to the LLM.
+1038   In Stage II, the LLM backbone remains frozen; only lightweight modules such as the projector,
+1039   retrieval heads, and teacher-side mapper are optimized. Thus, the main Stage-II cost is the frozen
+1040   LLM encoding of user/item prompts plus small alignment and ranking heads. This design avoids
+1041   updating the LLM parameters while still allowing the reshaped teacher representations to enter the
+1042   LLM retrieval space.
+
+
+                                                         26
+       Table 5: Compact Stage-I prompt templates for semantic asset construction. These prompts are used
+       only to build offline semantic assets and semantic neighborhood graphs.
+        Side       Prompt template
+
+        User       User <user_id> recently interacted with: <title_1>, <title_2>, . . . , <title_m>.
+        Item       Item <item_id>: <title>. Description: <description>.
+
+
+       Table 6: Compact Stage-II prompt templates for sequence injection. Projected collaborative em-
+       beddings are inserted at [HistoryEmb] and the final representations are read from [UserOut] and
+       [ItemOut].
+        Side       Prompt template
+
+        User       This user has made a series of purchases in the following order: Item No.1, Time: <t_1>,
+                   "<title_1>"[HistoryEmb], Item No.2, Time: <t_2>, "<title_2>"[HistoryEmb], . . . , Item No.T, Time: <t_T>,
+                   "<title_T>"[HistoryEmb]. Based on this sequence of purchases, generate user representation token:[UserOut]
+        Item       The item title and item embedding are as follows: "<title_j>"[HistoryEmb], then generate item representation
+                   token:[ItemOut]
+
+
+
+1043   At inference time, EchoRec does not run SACP, construct semantic neighborhoods, or evaluate
+1044   contrastive objectives. The deployed path only keeps the enhanced teacher item table, projection
+1045   module, frozen LLM, and retrieval heads. Therefore, EchoRec is heavier than pure ID-based
+1046   recommenders, but cheaper than full LLM adaptation. Its extra computation is mainly an offline or
+1047   training-time cost traded for better structure modeling and sequence retention.
+
+1048   C     Additional Experimental Results
+1049   C.1     Sequence Perturbation on Additional Datasets
+
+1050   To complement the CDs example in the main text, we further report sequence-perturbation results
+1051   on Movies, Scientific, and Electronics. Across these supplementary cases, EchoRec again preserves
+1052   stronger clean-input performance and generally shows smaller degradation under moderate pertur-
+1053   bations such as shuffle and removing recent interactions, while both methods still deteriorate more
+1054   noticeably under full reversal.
+1055   C.2     Controlled SSHG Diagnosis on Movies, Scientific, and Electronics
+
+1056   To complement the CDs example in the main text, we further visualize the controlled SSHG diagnosis
+1057   on the other three datasets under the same protocol. The same qualitative pattern persists: EchoRec
+1058   remains above Pure-SI across neighborhood sizes, indicating that teacher-space reshaping consistently
+1059   improves semantic compatibility before injection and preserves more local sequential structure after
+1060   injection. These dataset-level plots are consistent with the cross-dataset k=20 summary in Table 3.
+
+1061   D     Limitations
+1062   Considering computational budgets and resource constraints, we evaluate EchoRec under a frozen-
+1063   LLM retrieval setting with representative teacher backbones and shared benchmarks. While the
+1064   same stage-wise design can be applied more broadly, results may vary with different LLM hosts,
+1065   richer multimodal inputs, or alternative serving pipelines. EchoRec also uses offline semantic-asset
+1066   construction and two-stage training, adding overhead over single-stage injection methods.
+
+1067   E     Future Work
+1068   Future work can study more efficient semantic-asset construction, parameter-efficient adaptation,
+1069   and evaluation with a wider range of LLM hosts and teacher backbones. It is also worth extending
+1070   the current setting to richer multimodal or online recommendation scenarios, so that large-small
+1071   collaboration remains effective and practical in real-world pipelines.
+
+
+                                                                   27
+        Pure-SI   EchoRec              Pure-SI    EchoRec             Pure-SI   EchoRec
+
+ 0.5 +12.3% +11.3% +12.4%      0.5 +19.4% +21.5% +18.2%        0.5
+ 0.4             +6.5%         0.4             +24.6%          0.4 +18.3% +10.4% +18.0%
+ 0.3                           0.3                             0.3             +1.9%
+ 0.2                           0.2                             0.2
+ 0.1                           0.1                             0.1
+ 0.0 Orig. Shuf. Rev. Drop     0.0 Orig. Shuf. Rev. Drop       0.0 Orig. Shuf. Rev. Drop
+                        rec.                            rec.                           rec.
+
+         (a) Movies                    (b) Scientific                (c) Electronics
+
+
+        Pure-SI   EchoRec             Pure-SI    EchoRec             Pure-SI    EchoRec
+ 0.8 +9.6% +8.2%       +9.4%   0.8        +15.6%      +13.3%
+                                                               0.8
+ 0.6             +5.6%         0.6 +13.5%      +18.1%          0.6 +14.9% +7.6% +14.0%
+                                                                               +1.1%
+ 0.4                           0.4                             0.4
+ 0.2                           0.2                             0.2
+ 0.0 Orig. Shuf. Rev. Drop     0.0 Orig. Shuf. Rev. Drop       0.0 Orig. Shuf. Rev. Drop
+                        rec.                            rec.                           rec.
+
+         (d) Movies                    (e) Scientific                (f) Electronics
+Figure 5: Sequence perturbation on Movies, Scientific, and Electronics. Top row: NDCG@10;
+bottom row: HR@10.
+
+
+
+
+                                            28
+             Pure-SI   EchoRec                         Pure-SI    EchoRec                           Pure-SI    EchoRec
+0.08                                      0.10                                         0.08
+                                          0.08                                         0.05
+0.05
+                        20 = +25.3%       0.05                      20 = +17.0%
+                                                                                       0.03                     20 = +47.7%
+0.03
+       10      20 30 40 50                       10      20 30 40 50                          10      20 30 40 50
+            Neighborhood size k                       Neighborhood size k                          Neighborhood size k
+
+              (a) Movies                               (b) Scientific                               (c) Electronics
+
+
+
+0.18         Pure-SI   EchoRec                         Pure-SI    EchoRec              0.15         Pure-SI   EchoRec
+                                          0.24
+0.12                                      0.16                                         0.10
+0.06                                      0.08                                         0.05
+                           20 = +126.3%                                 20 = +164.9%                             20 = +190.8%
+
+       10      20 30 40 50                       10      20 30 40 50                          10      20 30 40 50
+            Neighborhood size k                       Neighborhood size k                          Neighborhood size k
+
+              (d) Movies                               (e) Scientific                              (f) Electronics
+Figure 6: Controlled SSHG diagnosis on three additional datasets across neighborhood sizes. Top
+row: semantic alignment; bottom row: structure transfer.
+
+
+
+
+                                                             29
+

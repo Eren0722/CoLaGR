@@ -1,0 +1,19 @@
+\begin{figure}[t]
+\centering
+\IfFileExists{figure/cds_scientific_sshg_curves.pdf}
+{\includegraphics[width=\textwidth]{figure/cds_scientific_sshg_curves.pdf}}
+{\IfFileExists{figure/cds_scientific_sshg_curves.png}
+{\includegraphics[width=\textwidth]{figure/cds_scientific_sshg_curves.png}}
+{\fbox{\rule{0pt}{2.2in}\rule{0.98\textwidth}{0pt}}}}
+\caption{CDs �?Scientific 上的受控 SSHG 诊断。上排对�?CDs，下排对�?Scientific；在每一排中，左图跟踪注入前语义对齐，右图跟踪注入后结构迁移。EchoRec 在不同邻域尺度上均稳定优�?Pure-SI。}
+\label{fig:cds_scientific_sshg_curves}
+\end{figure}
+
+图~\ref{fig:cds_scientific_sshg_curves} 在两个代表性数据集上直观展示了多尺度诊断结果。在 CDs �?Scientific 上，EchoRec 都同时提升了注入前语义对齐与注入后结构迁移保真度，这�?SSHG 机制所预测的模式一致。以 $k=20$ 为例，在 CDs 上，EchoRec 将语义对齐从 0.033 提升�?0.053，将结构迁移 Jaccard �?0.115 提升�?0.193；Scientific 上也呈现出相同方向、且幅度更大的改进。附录表~\ref{tab:multidataset_sshg_delta} 进一步将这一受控诊断扩展到四个数据集：所有数据集�?$\Delta$PreAlign@20�?\Delta$Jaccard@20�?\Delta$RBO@20 �?$\Delta$NDCG@10 均为正值。这说明 SACP 稳定地降低了注入前错配，�?SI 则稳定地帮助 LLM 在注入后保留更多局部序列结构。这些基�?overlap �?order 的指标只是经验代理，而不是附录~\ref{app:theory} 中连续序列保持误差的直接观测，但它们一致地反映了同一个“局部结构保持”机制�?
+\subsection{RQ4：序列扰动稳定性}
+\label{subsec:seq-perturb}
+
+我们进一步测试当输入序列在推理时受到扰动时，EchoRec 是否仍能保持稳定。图~\ref{fig:seq_perturb_panel} 给出�?CDs �?Scientific 两个数据集上四种设置的结果：原始历史、shuffle、reverse �?drop-recent。可以看到，在两个数据集上，EchoRec 不仅保持了更强的干净输入性能，而且�?shuffle �?drop-recent 这类中等强度扰动下通常表现出更小的退化幅度；而两种方法在完全 reverse 情形下都会显著下降。这一现象说明，教师侧预处理提升的是序列利用的稳定性，而不仅仅是放大了脆弱�?prompt 级顺序敏感性�?
+
+\begin{figure}[t]
+\centering

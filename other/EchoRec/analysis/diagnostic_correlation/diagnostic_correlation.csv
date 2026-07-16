@@ -1,0 +1,5 @@
+pair,x_key,y_key,rho
+$\Delta$PreAlign@20 vs. $\Delta$Jaccard@20,d_PreAlign20,d_Jaccard20,0.4867277813839081
+$\Delta$PreAlign@20 vs. $\Delta$RBO@20,d_PreAlign20,d_RBO20,0.4439547339289587
+$\Delta$Jaccard@20 vs. $\Delta$NDCG@10,d_Jaccard20,d_NDCG10,0.788235294117647
+$\Delta$RBO@20 vs. $\Delta$NDCG@10,d_RBO20,d_NDCG10,0.7558823529411764

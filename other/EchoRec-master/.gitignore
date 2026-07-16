@@ -1,0 +1,15 @@
+logs/
+SA_assets/
+raw_data/
+.cache_*/
+.cache*/
+__pycache__/
+*.py[cod]
+*.pt
+*.pth
+*.pkl
+*_results.txt
+*_all_results.txt
+SeqRec/data_*/
+SeqRec/*/*/
+models/*/*

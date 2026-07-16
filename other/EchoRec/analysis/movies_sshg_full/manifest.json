@@ -1,0 +1,40 @@
+{
+  "dataset": "Movies_and_TV",
+  "sample_size": 2000,
+  "neighbor_ks": [
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "transfer_k": 20,
+  "rbo_p": 0.9,
+  "variants": {
+    "Pure-SI": {
+      "save_dir": "movies_pure_sasrec_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Movies_and_TV/SASRec_saving.epoch=200.lr=0.001.layer=2.head=1.hidden=64.maxlen=128.pth",
+      "best_epoch": 22
+    },
+    "w/o Item-CL": {
+      "save_dir": "movies_wo_itemcl_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Movies_and_TV/movies_wo_itemcl_teacher/model_metric_best.pth",
+      "best_epoch": 7
+    },
+    "w/o User-CL": {
+      "save_dir": "movies_wo_usercl_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Movies_and_TV/movies_wo_usercl_teacher/model_metric_best.pth",
+      "best_epoch": 13
+    },
+    "EchoRec": {
+      "save_dir": "movies_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Movies_and_TV/movies_sa_teacher/model_metric_best.pth",
+      "best_epoch": 17
+    },
+    "w/o Match": {
+      "save_dir": "movies_wo_match_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Movies_and_TV/movies_sa_teacher/model_metric_best.pth",
+      "best_epoch": 9
+    }
+  }
+}

@@ -1,0 +1,14 @@
+metric,Pure-SI,EchoRec,Rel. Impr.
+Semantic alignment (Jaccard@10),0.0268,0.0449,+67.6%
+Semantic alignment (Jaccard@20),0.0331,0.0535,+61.6%
+Semantic alignment (Jaccard@30),0.0384,0.0614,+59.9%
+Semantic alignment (Jaccard@40),0.0433,0.0687,+58.6%
+Semantic alignment (Jaccard@50),0.0479,0.0755,+57.5%
+Structure transfer (Jaccard@10),0.0910,0.1608,+76.6%
+Structure transfer (Jaccard@20),0.1155,0.1934,+67.5%
+Structure transfer (Jaccard@30),0.1324,0.2129,+60.8%
+Structure transfer (Jaccard@40),0.1454,0.2298,+58.0%
+Structure transfer (Jaccard@50),0.1561,0.2425,+55.3%
+Structure transfer (RBO@20),0.1297,0.2283,+75.9%
+Test NDCG@10,0.3718,0.4275,+15.0%
+Test HR@10,0.5942,0.6600,+11.1%

@@ -1,0 +1,1 @@
+Pearson(delta semantic alignment, delta transfer fidelity) = 0.634479

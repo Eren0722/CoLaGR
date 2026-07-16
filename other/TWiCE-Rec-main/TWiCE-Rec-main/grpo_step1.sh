@@ -1,0 +1,2 @@
+export VLLM_USE_V1="0"
+CUDA_VISIBLE_DEVICES=0 trl vllm-serve --model data/google_gemma-3-1b-it_sft_001_amazon_Grocery_and_Gourmet_Food_lora --tensor-parallel-size 1 --max-model-len 13000 --dtype bfloat16 --port 8001

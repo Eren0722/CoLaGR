@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Cross-dataset controlled SSHG diagnosis. Each entry reports the absolute improvement of EchoRec over Pure-SI on the corresponding dataset.}
+\label{tab:multidataset_sshg_delta}
+\small
+\setlength{\tabcolsep}{7pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular}{lcccc}
+\toprule
+Dataset & $\Delta$PreAlign@20 & $\Delta$Jaccard@20 & $\Delta$RBO@20 & $\Delta$NDCG@10 \\
+\midrule
+Movies & 0.0226 & 0.0524 & 0.0690 & 0.0430 \\
+Scientific & 0.0378 & 0.0834 & 0.0890 & 0.0660 \\
+Electronics & 0.0333 & 0.0435 & 0.0494 & 0.0576 \\
+CDs & 0.0204 & 0.0780 & 0.0985 & 0.0557 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,18 @@
+\begin{table}[!t]
+\centering
+\caption{Diagnostic correlation over dataset--variant pairs. Pure-SI is excluded after serving as the within-dataset baseline.}
+\label{tab:diagnostic_correlation}
+\small
+\setlength{\tabcolsep}{7pt}
+\renewcommand{\arraystretch}{1.06}
+\begin{tabular}{lc}
+\toprule
+Correlation pair & Spearman's $\rho$ \\
+\midrule
+$\Delta$PreAlign@20 vs. $\Delta$Jaccard@20 & 0.487 \\
+$\Delta$PreAlign@20 vs. $\Delta$RBO@20 & 0.444 \\
+$\Delta$Jaccard@20 vs. $\Delta$NDCG@10 & 0.788 \\
+$\Delta$RBO@20 vs. $\Delta$NDCG@10 & 0.756 \\
+\bottomrule
+\end{tabular}
+\end{table}

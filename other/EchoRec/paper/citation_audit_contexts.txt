@@ -1,0 +1,109 @@
+﻿Citation count 72 unique 33
+
+L59: lin2025survey, zhao2024era, you2025r2ec, liu2025recbench, kim2025lost, lin2025igd, yu2025tagcf
+With rapid advances in text understanding, contextual modeling, and open-domain reasoning, large language models (LLMs) are increasingly viewed as promising foundation models for recommendation~\cite{lin2025survey,zhao2024era}. Their strong semantic capacity and unified modeling interface have motivated a growing body of work on combining LLMs with sequential recommendation signals~\cite{you2025r2ec,liu2025recbench}. User interaction histories are therefore no longer treated only as sparse collaborative observations; they are also cast as inputs to a semantic reasoning model that can potentially capture richer behavioral patterns~\cite{kim2025lost}. LLM-based sequential recommendation has consequently become an active research direction at the intersection of language modeling and sequential user modeling~\cite{lin2025igd}. These developments highlight an important question: how to introduce reliable sequential inductive bias into LLM-based recommendation without sacrificing the semantic strengths of LLMs~\cite{yu2025tagcf}.
+  - lin2025survey => How can recommender systems benefit from large language models: A survey
+  - zhao2024era => Recommender systems in the era of large language models (LLMs)
+  - you2025r2ec => R2ec: Towards Large Recommender Models with Reasoning
+  - liu2025recbench => Can LLMs Outshine Conventional Recommenders? A Comparative Evaluation
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+  - lin2025igd => IGD: Token Decisiveness Modeling via Information Gain in LLMs for Personalized Recommendation
+  - yu2025tagcf => Who You Are Matters: Bridging Topics and Social Roles via LLM-Enhanced Logical Recommendation
+
+L61: bao2023tallrec, yu2026thinkrec, liao2024llara, kim2024allmrec, zhang2025collm, zheng2024lcrec, hong2025eagerllm, kim2025lost, ren2024rlmrec, yang2024lrd, liu2024llmesr, cui2025sracl, lin2025igd, yu2025tagcf
+Early efforts mainly adapted the LLM itself to recommendation through prompting and lightweight tuning~\cite{bao2023tallrec}. Explicit reasoning scaffolds further extended this textual adaptation paradigm~\cite{yu2026thinkrec}. As purely textual adaptation started to show clear limits, later studies reintroduced collaborative knowledge into the pipeline by aligning LLMs with pretrained sequential recommenders~\cite{liao2024llara,kim2024allmrec}. Other methods inject collaborative signals directly into the LLM context~\cite{zhang2025collm,zheng2024lcrec}. Recent sequence-aware variants further emphasize the need to preserve dynamic preference information during injection~\cite{hong2025eagerllm,kim2025lost}. Another line kept the LLM outside the online decision loop and instead used it as a semantic encoder or relation provider for smaller sequential models~\cite{ren2024rlmrec,yang2024lrd}. This offline semantic-enhancement direction has also been explored through relation-guided or contrastive pre-training objectives~\cite{liu2024llmesr,cui2025sracl}. Across these lines of work, a shared goal is to connect the sequential space learned from user behavior with the semantic space of LLMs~\cite{lin2025igd,yu2025tagcf}.
+  - bao2023tallrec => TALLRec: An effective and efficient tuning framework to align large language model with recommendation
+  - yu2026thinkrec => ThinkRec: Thinking-based recommendation via LLM
+  - liao2024llara => LLaRA: Large language-recommendation assistant
+  - kim2024allmrec => Large language models meet collaborative filtering: An efficient all-round LLM-based recommender system
+  - zhang2025collm => CoLLM: Integrating collaborative embeddings into large language models for recommendation
+  - zheng2024lcrec => Adapting large language models by integrating collaborative semantics for recommendation
+  - hong2025eagerllm => EAGER-LLM: Enhancing large language models as recommenders through exogenous behavior-semantic integration
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+  - ren2024rlmrec => Representation learning with large language models for recommendation
+  - yang2024lrd => Sequential recommendation with latent relations based on large language model
+  - liu2024llmesr => LLM-ESR: Large language models enhancement for long-tailed sequential recommendation
+  - cui2025sracl => SRA-CL: Semantic retrieval augmented contrastive learning for sequential recommendation
+  - lin2025igd => IGD: Token Decisiveness Modeling via Information Gain in LLMs for Personalized Recommendation
+  - yu2025tagcf => Who You Are Matters: Bridging Topics and Social Roles via LLM-Enhanced Logical Recommendation
+
+L63: lin2025survey, lin2026tca4rec, lu2025cllmrec, xu2024cmclrec, kim2025lost, wang2026contextbias, yu2026thinkrec
+However, the sequential space and the LLM semantic space obey different neighborhood rules. The former reflects ID co-occurrence, popularity bias, and sparse interaction noise, whereas the latter is organized by textual semantics and world knowledge~\cite{lin2025survey}. We refer to this gap as the Semantic-Sequential Heterogeneity Gap (SSHG). SSHG mainly appears in two forms that matter for injection: local semantic metric mismatch, where semantic neighbors in the frozen LLM space are not preserved in the raw SRec space, and semantic-neighborhood topological fragmentation, where semantically similar users or sequences fail to form coherent local regions. Recent work on token-level collaborative alignment points to incompatible local rules across these spaces~\cite{lin2026tca4rec}. LLM-based view augmentation and cross-modal contrastive learning report related mismatches from different angles~\cite{lu2025cllmrec,xu2024cmclrec}. As a result, a lightweight projector may weaken transferable sequential cues when forced to denoise, reorganize local structure, and align the sequential space at once. Recent diagnosis reports the same symptom: LLM-based recommenders may rely on shortcut context rather than stable sequential dependence~\cite{kim2025lost,wang2026contextbias}. Reasoning-oriented recommendation studies also suggest that shallow reasoning can obscure whether sequential preference is truly captured~\cite{yu2026thinkrec}.
+  - lin2025survey => How can recommender systems benefit from large language models: A survey
+  - lin2026tca4rec => Token-level collaborative alignment for LLM-based generative recommendation
+  - lu2025cllmrec => CLLMRec: Contrastive Learning with LLMs-based View Augmentation for Sequential Recommendation
+  - xu2024cmclrec => CMCLRec: Cross-modal Contrastive Learning for User Cold-start Sequential Recommendation
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+  - wang2026contextbias => Does LLM focus on the right words? Mitigating context bias in LLM-based recommenders
+  - yu2026thinkrec => ThinkRec: Thinking-based recommendation via LLM
+
+L65: zhang2026crossscale, lv2025lsc4rec
+From a cross-space transfer viewpoint, effective injection requires a teacher space whose local geometry is compatible with the target semantic host. Inspired by recent large-small collaboration studies in recommendation~\cite{zhang2026crossscale,lv2025lsc4rec}, we propose EchoRec, a staged large-small collaborative recommendation framework organized around reshape first, inject later. EchoRec first uses a frozen LLM to construct offline semantic assets from items and user histories, and then applies Semantic-Aligned Contrastive Pre-training (SACP) to the sequential teacher under next-item supervision together with item-level and user-level semantic constraints, reducing local semantic metric mismatch and semantic-neighborhood fragmentation in the teacher space. Sequence Injection (SI) then projects the purified teacher item embeddings into the frozen LLM and aligns LLM-side user states with teacher representations, transferring refined sequential structure with lower cross-space distortion.
+  - zhang2026crossscale => Cross-Scale Collaboration between LLMs and Lightweight Sequential Recommenders with Domain-Specific Latent Reasoning
+  - lv2025lsc4rec => Collaboration of large language models and small recommendation models for device-cloud recommendation
+
+L82: hidasi2016gru4rec, kang2018sasrec, sun2019bert4rec
+where $S_u$ is the observed history and $y_u$ is the next item to be predicted. Conventional sequential models such as GRU4Rec~\cite{hidasi2016gru4rec}, SASRec~\cite{kang2018sasrec}, and BERT4Rec~\cite{sun2019bert4rec} therefore carry an explicit sequential inductive bias, but their representation spaces are still largely dominated by ID co-occurrence.
+  - hidasi2016gru4rec => Session-based recommendations with recurrent neural networks
+  - kang2018sasrec => Self-attentive sequential recommendation
+  - sun2019bert4rec => BERT4Rec: Sequential recommendation with bidirectional encoder representations from transformer
+
+L86: kim2025lost
+In this paper, LLM4Rec refers to recommendation methods that keep the LLM in the online decision loop and use it to produce the recommendation output. Under this setting, user history is typically fed into the LLM via textual prompts or soft prompts. For feature-injection-based methods, collaborative representations from a small recommender are first mapped into the LLM hidden space and then used as contextual conditions during inference. Diagnostic evidence from prior work~\cite{kim2025lost} suggests that existing LLM4Rec models exhibit limited sensitivity to sequential perturbation, indicating that ``input history'' is not equivalent to ``stable sequential utilization.''
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+
+L274: kim2025lost
+\noindent\textbf{Datasets.} We follow the shared benchmark protocol of Kim et al.~\cite{kim2025lost} on four datasets: Movies, Scientific, Electronics, and CDs. For each user, we adopt the standard leave-one-out sequential split. Full dataset statistics are deferred to Appendix~\ref{app:datasets}.
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+
+L278: hidasi2016gru4rec, sun2019bert4rec, yuan2019nextitnet, kang2018sasrec, bao2023tallrec, liao2024llara, kim2024allmrec, zhang2025collm, kim2025lost
+\noindent\textbf{Compared Methods.} Under the same retrieval-style protocol, we compare EchoRec with nine directly comparable baselines: GRU4Rec~\cite{hidasi2016gru4rec}, BERT4Rec~\cite{sun2019bert4rec}, NextItNet~\cite{yuan2019nextitnet}, SASRec~\cite{kang2018sasrec}, TALLRec~\cite{bao2023tallrec}, LLaRA~\cite{liao2024llara}, A-LLMRec~\cite{kim2024allmrec}, CoLLM~\cite{zhang2025collm}, and LLM-SRec~\cite{kim2025lost}. Detailed grouping and comparison notes are summarized in Appendix~\ref{app:baselines}.
+  - hidasi2016gru4rec => Session-based recommendations with recurrent neural networks
+  - sun2019bert4rec => BERT4Rec: Sequential recommendation with bidirectional encoder representations from transformer
+  - yuan2019nextitnet => A simple convolutional generative network for next item recommendation
+  - kang2018sasrec => Self-attentive sequential recommendation
+  - bao2023tallrec => TALLRec: An effective and efficient tuning framework to align large language model with recommendation
+  - liao2024llara => LLaRA: Large language-recommendation assistant
+  - kim2024allmrec => Large language models meet collaborative filtering: An efficient all-round LLM-based recommender system
+  - zhang2025collm => CoLLM: Integrating collaborative embeddings into large language models for recommendation
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+
+L280: qin2023mclrec, cui2025sracl
+\noindent\textbf{Implementation Details.} We follow the released protocols for directly comparable LLM4Rec baselines. EchoRec is model-agnostic and can be integrated with various sequential recommendation models. To introduce our approach, we adopt the Transformer architecture as the sequential teacher in the main setting, following prior studies on sequential recommendation~\cite{qin2023mclrec,cui2025sracl}. Appendix~\ref{app:model_agnostic} validates the model-agnostic nature of EchoRec. Appendix~\ref{app:exp_settings} gives details.
+  - qin2023mclrec => Meta-optimized Contrastive Learning for Sequential Recommendation
+  - cui2025sracl => SRA-CL: Semantic retrieval augmented contrastive learning for sequential recommendation
+
+L289: kim2025lost
+\caption{Overall performance on the shared benchmark of Kim et al.~\cite{kim2025lost}. We compare EchoRec with nine directly comparable baselines under the same protocol. The rightmost column reports EchoRec's relative improvement over the strongest prior LLM4Rec baseline. Best results are in bold.}
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+
+L485: rendle2010fpmc, hidasi2016gru4rec, yuan2019nextitnet, kang2018sasrec, sun2019bert4rec, xu2024cmclrec, lu2025cllmrec, xu2025hpserec, zhou2022fmlprec
+Sequential recommendation mainly focuses on identifying similar items or users from collaborative filtering signals and modeling how user preference evolves over interaction histories. Early methods combined matrix factorization with Markov transitions to capture temporal dynamics, such as FPMC~\cite{rendle2010fpmc}. Neural models then pushed this line forward: GRU4Rec~\cite{hidasi2016gru4rec} used recurrent architectures, NextItNet~\cite{yuan2019nextitnet} introduced convolutional sequence modeling, and later SASRec~\cite{kang2018sasrec} and BERT4Rec~\cite{sun2019bert4rec} further improved sequence representation with attention-based architectures. Recent studies such as CMCLRec~\cite{xu2024cmclrec}, CLLMRec~\cite{lu2025cllmrec}, HPSERec~\cite{xu2025hpserec}, and FMLP-Rec~\cite{zhou2022fmlprec} continue to strengthen sequence learning through multimodal enhancement, LLM-based view augmentation, long-tail modeling, and lightweight encoders. Despite these advances, sequential recommender spaces are still mainly shaped by ID co-occurrence and exposure statistics, and therefore often lack sufficiently smooth and compatible semantic structure when transferred into an LLM host.
+  - rendle2010fpmc => Factorizing personalized Markov chains for next-basket recommendation
+  - hidasi2016gru4rec => Session-based recommendations with recurrent neural networks
+  - yuan2019nextitnet => A simple convolutional generative network for next item recommendation
+  - kang2018sasrec => Self-attentive sequential recommendation
+  - sun2019bert4rec => BERT4Rec: Sequential recommendation with bidirectional encoder representations from transformer
+  - xu2024cmclrec => CMCLRec: Cross-modal Contrastive Learning for User Cold-start Sequential Recommendation
+  - lu2025cllmrec => CLLMRec: Contrastive Learning with LLMs-based View Augmentation for Sequential Recommendation
+  - xu2025hpserec => HPSERec: A Hierarchical Partitioning and Stepwise Enhancement Framework for Long-tailed Sequential Recommendation
+  - zhou2022fmlprec => Filter-enhanced MLP is all you need for sequential recommendation
+
+L489: lin2025survey, zhao2024era, bao2023tallrec, yu2026thinkrec, liao2024llara, zhang2025collm, kim2024allmrec, kim2025lost, ren2024rlmrec, yang2024lrd, liu2024llmesr, cui2025sracl, liu2025llmemb, lin2026tca4rec, zhang2026crossscale, lv2025lsc4rec
+With the rise of large language models, recommendation research has explored tighter ways of coupling LLMs with sequential signals~\cite{lin2025survey,zhao2024era}. Early efforts mainly adapted LLMs through prompting or lightweight tuning: TALLRec~\cite{bao2023tallrec} uses PEFT to bridge language modeling and recommendation, while ThinkRec~\cite{yu2026thinkrec} further introduces explicit reasoning. As purely textual adaptation showed clear limits, later work brought collaborative knowledge back into the LLM pipeline. LLaRA~\cite{liao2024llara} combines CF-SRec item embeddings with textual prompts, CoLLM~\cite{zhang2025collm} directly injects collaborative embeddings into the online LLM context, and A-LLMRec~\cite{kim2024allmrec} further strengthens CF knowledge absorption through representation alignment. More recently, Kim et al.~\cite{kim2025lost} show that existing LLM4Rec models still fail to capture dynamic preference from interaction sequences, and introduce LLM-SRec for sequence-aware representation distillation. Another line uses LLMs to enhance smaller recommenders, including RLMRec~\cite{ren2024rlmrec}, LRD~\cite{yang2024lrd}, LLM-ESR~\cite{liu2024llmesr}, SRA-CL~\cite{cui2025sracl}, and LLMEmb~\cite{liu2025llmemb}, while TCA4Rec~\cite{lin2026tca4rec} explores more explicit collaborative alignment in the generative space. Inspired by recent large-small collaboration studies~\cite{zhang2026crossscale,lv2025lsc4rec}, we argue that these two directions should not be treated separately. Nevertheless, existing methods mainly focus on alignment or distillation at injection time, and pay much less attention to the structural mismatch between the teacher space and the LLM semantic host before injection.
+  - lin2025survey => How can recommender systems benefit from large language models: A survey
+  - zhao2024era => Recommender systems in the era of large language models (LLMs)
+  - bao2023tallrec => TALLRec: An effective and efficient tuning framework to align large language model with recommendation
+  - yu2026thinkrec => ThinkRec: Thinking-based recommendation via LLM
+  - liao2024llara => LLaRA: Large language-recommendation assistant
+  - zhang2025collm => CoLLM: Integrating collaborative embeddings into large language models for recommendation
+  - kim2024allmrec => Large language models meet collaborative filtering: An efficient all-round LLM-based recommender system
+  - kim2025lost => Lost in sequence: Do large language models understand sequential recommendation? In \textit{Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '25)}. ACM.
+  - ren2024rlmrec => Representation learning with large language models for recommendation
+  - yang2024lrd => Sequential recommendation with latent relations based on large language model
+  - liu2024llmesr => LLM-ESR: Large language models enhancement for long-tailed sequential recommendation
+  - cui2025sracl => SRA-CL: Semantic retrieval augmented contrastive learning for sequential recommendation
+  - liu2025llmemb => LLMEmb: Large language model can be a good embedding generator for sequential recommendation
+  - lin2026tca4rec => Token-level collaborative alignment for LLM-based generative recommendation
+  - zhang2026crossscale => Cross-Scale Collaboration between LLMs and Lightweight Sequential Recommenders with Domain-Specific Latent Reasoning
+  - lv2025lsc4rec => Collaboration of large language models and small recommendation models for device-cloud recommendation

@@ -1,0 +1,40 @@
+{
+  "dataset": "CDs_and_Vinyl",
+  "sample_size": 2000,
+  "neighbor_ks": [
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "transfer_k": 20,
+  "rbo_p": 0.9,
+  "variants": {
+    "Pure-SI": {
+      "save_dir": "cds_pure_sasrec_si_cand4_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/CDs_and_Vinyl/SASRec_saving.epoch=200.lr=0.001.layer=2.head=1.hidden=64.maxlen=128.pth",
+      "best_epoch": 7
+    },
+    "w/o Item-CL": {
+      "save_dir": "cds_wo_itemcl_si_cand4_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/CDs_and_Vinyl/cds_wo_itemcl_teacher/model_metric_best.pth",
+      "best_epoch": 9
+    },
+    "w/o User-CL": {
+      "save_dir": "cds_wo_usercl_si_cand4_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/CDs_and_Vinyl/cds_wo_usercl_teacher/model_metric_best.pth",
+      "best_epoch": 7
+    },
+    "EchoRec": {
+      "save_dir": "cds_si_cand4_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/CDs_and_Vinyl/cds_sa_teacher/model_metric_best.pth",
+      "best_epoch": 7
+    },
+    "w/o Match": {
+      "save_dir": "cds_wo_match_si_cand4_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/CDs_and_Vinyl/cds_sa_teacher/model_metric_best.pth",
+      "best_epoch": 8
+    }
+  }
+}

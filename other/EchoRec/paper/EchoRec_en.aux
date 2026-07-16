@@ -1,0 +1,271 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{lin2025survey,zhao2024era}
+\citation{liu2025recbench,zheng2024trsr}
+\citation{he2025llm2rec,kim2025lost}
+\citation{hong2025eagerllm}
+\citation{kim2025lost,hong2025eagerllm}
+\citation{bao2023tallrec}
+\citation{yu2026thinkrec,you2025r2ec}
+\citation{liao2024llara}
+\citation{zhang2025collm}
+\citation{kim2025lost}
+\citation{ren2024rlmrec}
+\citation{wang2025pad,cui2025sracl}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{1}{1}{Introduction}{section.1}{}}
+\citation{lin2025survey}
+\citation{lin2026tca4rec}
+\citation{lu2025cllmrec,xu2024cmclrec}
+\citation{kim2025lost,wang2026contextbias}
+\citation{yu2026thinkrec}
+\citation{kim2025lost}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Problem Definition}{2}{section.2}\protected@file@percent }
+\newlabel{sec:preliminary}{{2}{2}{Problem Definition}{section.2}{}}
+\citation{kim2025lost}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}LLM4Rec setting}{3}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Semantic-Sequential Heterogeneity Gap (SSHG)}{3}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Method}{3}{section.3}\protected@file@percent }
+\newlabel{sec:method}{{3}{3}{Method}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Overview}{3}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Semantic Asset Preparation}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Overall architecture of EchoRec. A frozen LLM first builds semantic assets for large-small collaboration. Stage I then reshapes the sequential teacher with SACP, and Stage II injects refined sequential embeddings into the frozen LLM via SI.}}{4}{figure.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:echorec_architecture}{{1}{4}{Overall architecture of EchoRec. A frozen LLM first builds semantic assets for large-small collaboration. Stage I then reshapes the sequential teacher with SACP, and Stage II injects refined sequential embeddings into the frozen LLM via SI}{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Stage I: Semantic-Aligned Contrastive Pre-training}{4}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Stage II: Structure-aware Sequence Injection}{5}{subsection.3.4}\protected@file@percent }
+\newlabel{eq:stage2_score}{{12}{5}{Stage II: Structure-aware Sequence Injection}{equation.12}{}}
+\citation{kim2025lost}
+\citation{hidasi2016gru4rec}
+\citation{sun2019bert4rec}
+\citation{yuan2019nextitnet}
+\citation{kang2018sasrec}
+\citation{bao2023tallrec}
+\citation{liao2024llara}
+\citation{kim2024allmrec}
+\citation{zhang2025collm}
+\citation{kim2025lost}
+\citation{qin2023mclrec,cui2025sracl}
+\newlabel{eq:stage2_match}{{14}{6}{Stage II: Structure-aware Sequence Injection}{equation.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Retention View and Training Pipeline}{6}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:theory}{{3.5}{6}{Retention View and Training Pipeline}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experiments}{6}{section.4}\protected@file@percent }
+\newlabel{sec:experiment}{{4}{6}{Experiments}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Experimental setup}{6}{subsection.4.1}\protected@file@percent }
+\citation{kim2025lost}
+\citation{kim2025lost}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Overall performance on the shared benchmark of Kim et al.~\cite  {kim2025lost}, with gains over the strongest prior LLM4Rec baseline in the rightmost column and best results in bold. EchoRec consistently improves ranking across datasets, showing the benefit of reshape-first sequence transfer.}}{7}{table.caption.3}\protected@file@percent }
+\newlabel{tab:main_overall}{{1}{7}{Overall performance on the shared benchmark of Kim et al.~\cite {kim2025lost}, with gains over the strongest prior LLM4Rec baseline in the rightmost column and best results in bold. EchoRec consistently improves ranking across datasets, showing the benefit of reshape-first sequence transfer}{table.caption.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Ablation results on all four datasets, where each row removes one EchoRec component and best results are in bold. The largest drops occur without SACP, indicating that teacher-side reshaping is the main source of improvement.}}{7}{table.caption.4}\protected@file@percent }
+\newlabel{tab:ablation_all}{{2}{7}{Ablation results on all four datasets, where each row removes one EchoRec component and best results are in bold. The largest drops occur without SACP, indicating that teacher-side reshaping is the main source of improvement}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Overall performance on the shared benchmark (RQ1)}{7}{subsection.4.2}\protected@file@percent }
+\newlabel{subsec:rq1}{{4.2}{7}{Overall performance on the shared benchmark (RQ1)}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Ablation study (RQ2)}{7}{subsection.4.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Sequence perturbation under input-history perturbations.}}{8}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:seq_perturb_panel}{{2}{8}{Sequence perturbation under input-history perturbations}{figure.caption.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Controlled SSHG diagnosis across neighborhood scales.}}{8}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:cds_scientific_sshg_curves}{{3}{8}{Controlled SSHG diagnosis across neighborhood scales}{figure.caption.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Cross-dataset SSHG diagnosis at $k=20$ on 2,000 sampled prefixes per seed, reporting Pure-SI, EchoRec, and relative gains. The rows trace a diagnostic progression from pre-injection semantic alignment to post-injection structure transfer and downstream ranking quality.}}{8}{table.caption.8}\protected@file@percent }
+\newlabel{tab:multidataset_sshg_delta}{{3}{8}{Cross-dataset SSHG diagnosis at $k=20$ on 2,000 sampled prefixes per seed, reporting Pure-SI, EchoRec, and relative gains. The rows trace a diagnostic progression from pre-injection semantic alignment to post-injection structure transfer and downstream ranking quality}{table.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Sequence perturbation stability (RQ3)}{8}{subsection.4.4}\protected@file@percent }
+\newlabel{subsec:seq-perturb}{{4.4}{8}{Sequence perturbation stability (RQ3)}{subsection.4.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Controlled SSHG diagnosis (RQ4)}{8}{subsection.4.5}\protected@file@percent }
+\newlabel{subsec:post-sacp}{{4.5}{8}{Controlled SSHG diagnosis (RQ4)}{subsection.4.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Model-agnostic evaluation (RQ5)}{8}{subsection.4.6}\protected@file@percent }
+\newlabel{subsec:model_agnostic}{{4.6}{8}{Model-agnostic evaluation (RQ5)}{subsection.4.6}{}}
+\citation{rendle2010fpmc}
+\citation{hidasi2016gru4rec}
+\citation{yuan2019nextitnet}
+\citation{kang2018sasrec}
+\citation{sun2019bert4rec}
+\citation{chen2022iclrec}
+\citation{xu2025c2lrec}
+\citation{xu2024cmclrec}
+\citation{lu2025cllmrec}
+\citation{xu2025hpserec}
+\citation{zhou2022fmlprec}
+\citation{lin2025survey,zhao2024era}
+\citation{bao2023tallrec}
+\citation{yu2026thinkrec}
+\citation{liao2024llara}
+\citation{zhang2025collm}
+\citation{kim2024allmrec}
+\citation{kim2025lost}
+\citation{ren2024rlmrec}
+\citation{liu2024llmesr}
+\citation{cui2025sracl}
+\citation{liu2025llmemb}
+\citation{zhang2026crossscale,lv2025lsc4rec}
+\citation{wu2024coral}
+\citation{wang2025piccdr}
+\citation{yu2025tagcf}
+\citation{lin2026tca4rec}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Model-agnostic evaluation with BERT4Rec, SASRec, and GRU4Rec teachers.}}{9}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:model_agnostic_main}{{4}{9}{Model-agnostic evaluation with BERT4Rec, SASRec, and GRU4Rec teachers}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Related Work}{9}{section.5}\protected@file@percent }
+\newlabel{sec:related}{{5}{9}{Related Work}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{9}{section.6}\protected@file@percent }
+\bibcite{xu2025hpserec}{{1}{}{{}}{{}}}
+\bibcite{liu2025recbench}{{2}{}{{}}{{}}}
+\bibcite{lin2026tca4rec}{{3}{}{{}}{{}}}
+\bibcite{yu2025tagcf}{{4}{}{{}}{{}}}
+\bibcite{lv2025lsc4rec}{{5}{}{{}}{{}}}
+\bibcite{xu2024cmclrec}{{6}{}{{}}{{}}}
+\bibcite{you2025r2ec}{{7}{}{{}}{{}}}
+\bibcite{lu2025cllmrec}{{8}{}{{}}{{}}}
+\bibcite{wang2026contextbias}{{9}{}{{}}{{}}}
+\bibcite{xu2025c2lrec}{{10}{}{{}}{{}}}
+\bibcite{yu2026thinkrec}{{11}{}{{}}{{}}}
+\bibcite{zhang2026crossscale}{{12}{}{{}}{{}}}
+\bibcite{he2025llm2rec}{{13}{}{{}}{{}}}
+\bibcite{hong2025eagerllm}{{14}{}{{}}{{}}}
+\bibcite{cui2025sracl}{{15}{}{{}}{{}}}
+\bibcite{liu2025llmemb}{{16}{}{{}}{{}}}
+\bibcite{kim2025lost}{{17}{}{{}}{{}}}
+\bibcite{wang2025piccdr}{{18}{}{{}}{{}}}
+\bibcite{wang2025pad}{{19}{}{{}}{{}}}
+\bibcite{liao2024llara}{{20}{}{{}}{{}}}
+\bibcite{kim2024allmrec}{{21}{}{{}}{{}}}
+\bibcite{wu2024coral}{{22}{}{{}}{{}}}
+\bibcite{ren2024rlmrec}{{23}{}{{}}{{}}}
+\bibcite{zheng2024trsr}{{24}{}{{}}{{}}}
+\bibcite{liu2024llmesr}{{25}{}{{}}{{}}}
+\bibcite{qin2023mclrec}{{26}{}{{}}{{}}}
+\bibcite{zhou2022fmlprec}{{27}{}{{}}{{}}}
+\bibcite{chen2022iclrec}{{28}{}{{}}{{}}}
+\bibcite{rendle2010fpmc}{{29}{}{{}}{{}}}
+\bibcite{wang2020alignment}{{30}{}{{}}{{}}}
+\bibcite{hidasi2016gru4rec}{{31}{}{{}}{{}}}
+\bibcite{lin2025survey}{{32}{}{{}}{{}}}
+\bibcite{zhang2025collm}{{33}{}{{}}{{}}}
+\bibcite{sun2019bert4rec}{{34}{}{{}}{{}}}
+\bibcite{kang2018sasrec}{{35}{}{{}}{{}}}
+\bibcite{yuan2019nextitnet}{{36}{}{{}}{{}}}
+\bibcite{bao2023tallrec}{{37}{}{{}}{{}}}
+\bibcite{cover2006elements}{{38}{}{{}}{{}}}
+\bibcite{csiszar1967information}{{39}{}{{}}{{}}}
+\bibcite{zhao2024era}{{40}{}{{}}{{}}}
+\citation{cover2006elements}
+\citation{cover2006elements,csiszar1967information}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Theoretical Analysis: Information-Theoretic SSHG and Sequence Retention}{13}{appendix.A}\protected@file@percent }
+\newlabel{app:theory}{{A}{13}{Theoretical Analysis: Information-Theoretic SSHG and Sequence Retention}{appendix.A}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Distributional Setup}{13}{subsection.A.1}\protected@file@percent }
+\newlabel{app:theory_setup}{{A.1}{13}{Distributional Setup}{subsection.A.1}{}}
+\newlabel{eq:soft_dist}{{16}{13}{Distributional Setup}{equation.16}{}}
+\newlabel{eq:tv_def}{{17}{13}{Distributional Setup}{equation.17}{}}
+\newlabel{eq:ret_error}{{18}{13}{Distributional Setup}{equation.18}{}}
+\newlabel{eq:e_align}{{19}{13}{Distributional Setup}{equation.19}{}}
+\newlabel{eq:l_align}{{20}{13}{Distributional Setup}{equation.20}{}}
+\newlabel{eq:e_vs_l_align}{{21}{13}{Distributional Setup}{equation.21}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Information-Theoretic Definition of SSHG}{14}{subsection.A.2}\protected@file@percent }
+\newlabel{app:theory_sshg}{{A.2}{14}{Information-Theoretic Definition of SSHG}{subsection.A.2}{}}
+\newlabel{def:sshg}{{A.1}{14}{Information-Theoretic SSHG}{definition.A.1}{}}
+\newlabel{eq:sshg_def}{{22}{14}{Information-Theoretic SSHG}{equation.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Structural Assumptions}{14}{subsection.A.3}\protected@file@percent }
+\newlabel{app:theory_assumptions}{{A.3}{14}{Structural Assumptions}{subsection.A.3}{}}
+\newlabel{asm:maps}{{A.1}{14}{Teacher-side and LLM-side local decision rules}{assumption.A.1}{}}
+\newlabel{eq:two_maps}{{23}{14}{Teacher-side and LLM-side local decision rules}{equation.23}{}}
+\newlabel{eq:map_outputs}{{24}{14}{Teacher-side and LLM-side local decision rules}{equation.24}{}}
+\newlabel{asm:lipschitz}{{A.2}{14}{Injection-time Lipschitz stability}{assumption.A.2}{}}
+\newlabel{eq:lipschitz_llm}{{25}{14}{Injection-time Lipschitz stability}{equation.25}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Two-Level Instantiation of SSHG under SACP}{14}{subsection.A.4}\protected@file@percent }
+\newlabel{app:two_level_sshg}{{A.4}{14}{Two-Level Instantiation of SSHG under SACP}{subsection.A.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Item-level semantic metric mismatch.}{14}{section*.11}\protected@file@percent }
+\newlabel{eq:item_soft_dist}{{26}{14}{Item-level semantic metric mismatch}{equation.26}{}}
+\newlabel{eq:item_sshg}{{27}{14}{Item-level semantic metric mismatch}{equation.27}{}}
+\citation{wang2020alignment}
+\@writefile{toc}{\contentsline {paragraph}{User-level semantic neighborhood fragmentation.}{15}{section*.12}\protected@file@percent }
+\newlabel{eq:user_soft_dist}{{28}{15}{User-level semantic neighborhood fragmentation}{equation.28}{}}
+\newlabel{eq:user_sshg}{{29}{15}{User-level semantic neighborhood fragmentation}{equation.29}{}}
+\newlabel{eq:sacp_sshg}{{30}{15}{User-level semantic neighborhood fragmentation}{equation.30}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.5}SACP as Score-Distortion Surrogates for SSHG}{15}{subsection.A.5}\protected@file@percent }
+\newlabel{app:theory_surrogate}{{A.5}{15}{SACP as Score-Distortion Surrogates for SSHG}{subsection.A.5}{}}
+\newlabel{eq:delta_u}{{31}{15}{SACP as Score-Distortion Surrogates for SSHG}{equation.31}{}}
+\newlabel{lem:sshg_surrogate}{{A.1}{15}{Score-Distortion Surrogate for SSHG}{lemma.A.1}{}}
+\newlabel{eq:sshg_surrogate_bound}{{32}{15}{Score-Distortion Surrogate for SSHG}{equation.32}{}}
+\newlabel{eq:delta_score_pair}{{33}{15}{SACP as Score-Distortion Surrogates for SSHG}{equation.33}{}}
+\newlabel{eq:delta_partition}{{36}{15}{SACP as Score-Distortion Surrogates for SSHG}{equation.36}{}}
+\citation{csiszar1967information,cover2006elements}
+\newlabel{eq:item_delta}{{39}{16}{SACP as Score-Distortion Surrogates for SSHG}{equation.39}{}}
+\newlabel{eq:item_delta_bound}{{40}{16}{SACP as Score-Distortion Surrogates for SSHG}{equation.40}{}}
+\newlabel{eq:user_delta}{{41}{16}{SACP as Score-Distortion Surrogates for SSHG}{equation.41}{}}
+\newlabel{eq:user_delta_bound}{{42}{16}{SACP as Score-Distortion Surrogates for SSHG}{equation.42}{}}
+\newlabel{eq:sacp_delta_bound}{{43}{16}{SACP as Score-Distortion Surrogates for SSHG}{equation.43}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.6}Semantic-Host Residual and Rule Discrepancy}{16}{subsection.A.6}\protected@file@percent }
+\newlabel{app:theory_host_residual}{{A.6}{16}{Semantic-Host Residual and Rule Discrepancy}{subsection.A.6}{}}
+\newlabel{eq:p_host}{{44}{16}{Semantic-Host Residual and Rule Discrepancy}{equation.44}{}}
+\newlabel{eq:host_residual}{{45}{16}{Semantic-Host Residual and Rule Discrepancy}{equation.45}{}}
+\newlabel{lem:rule_discrepancy}{{A.2}{16}{Rule Discrepancy via SSHG and Host Residual}{lemma.A.2}{}}
+\newlabel{eq:rule_discrepancy_bound}{{46}{16}{Rule Discrepancy via SSHG and Host Residual}{equation.46}{}}
+\newlabel{eq:rule_disc_triangle}{{48}{16}{Semantic-Host Residual and Rule Discrepancy}{equation.48}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.7}Information-Theoretic Sequence-Retention Bound}{17}{subsection.A.7}\protected@file@percent }
+\newlabel{app:main_theorem}{{A.7}{17}{Information-Theoretic Sequence-Retention Bound}{subsection.A.7}{}}
+\newlabel{thm:retention}{{A.1}{17}{Sequence-Retention Upper Bound}{theorem.A.1}{}}
+\newlabel{eq:user_bound}{{51}{17}{Sequence-Retention Upper Bound}{equation.51}{}}
+\newlabel{eq:avg_bound}{{52}{17}{Sequence-Retention Upper Bound}{equation.52}{}}
+\newlabel{eq:avg_sr}{{53}{17}{Sequence-Retention Upper Bound}{equation.53}{}}
+\newlabel{eq:avg_bound_lalign}{{54}{17}{Sequence-Retention Upper Bound}{equation.54}{}}
+\newlabel{eq:proof_start}{{55}{17}{Information-Theoretic Sequence-Retention Bound}{equation.55}{}}
+\newlabel{eq:proof_host}{{56}{17}{Information-Theoretic Sequence-Retention Bound}{equation.56}{}}
+\newlabel{eq:triangle_maps}{{57}{17}{Information-Theoretic Sequence-Retention Bound}{equation.57}{}}
+\newlabel{eq:first_term}{{58}{17}{Information-Theoretic Sequence-Retention Bound}{equation.58}{}}
+\newlabel{eq:second_term}{{59}{17}{Information-Theoretic Sequence-Retention Bound}{equation.59}{}}
+\newlabel{eq:l1_bound}{{60}{17}{Information-Theoretic Sequence-Retention Bound}{equation.60}{}}
+\newlabel{eq:avg_intermediate}{{62}{17}{Information-Theoretic Sequence-Retention Bound}{equation.62}{}}
+\citation{kim2025lost}
+\@writefile{lot}{\contentsline {table}{\numberline {A.1}{\ignorespaces Diagnostic correlation over dataset--variant pairs. Pure-SI is excluded after serving as the within-dataset baseline.}}{18}{table.caption.15}\protected@file@percent }
+\newlabel{tab:diagnostic_correlation}{{A.1}{18}{Diagnostic correlation over dataset--variant pairs. Pure-SI is excluded after serving as the within-dataset baseline}{table.caption.15}{}}
+\@writefile{toc}{\contentsline {paragraph}{Interpretation.}{18}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.8}Relation to the Main-Text Diagnosis}{18}{subsection.A.8}\protected@file@percent }
+\newlabel{app:diagnosis_relation}{{A.8}{18}{Relation to the Main-Text Diagnosis}{subsection.A.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Diagnostic correlation.}{18}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.9}Discussion: Sequence-Perturbation Robustness}{18}{subsection.A.9}\protected@file@percent }
+\newlabel{app:perturb_cor}{{A.9}{18}{Discussion: Sequence-Perturbation Robustness}{subsection.A.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Additional Experimental Settings}{18}{appendix.B}\protected@file@percent }
+\newlabel{app:exp_settings}{{B}{18}{Additional Experimental Settings}{appendix.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Datasets}{18}{subsection.B.1}\protected@file@percent }
+\newlabel{app:datasets}{{B.1}{18}{Datasets}{subsection.B.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Evaluation and Diagnostic Metrics}{18}{subsection.B.2}\protected@file@percent }
+\newlabel{app:metrics}{{B.2}{18}{Evaluation and Diagnostic Metrics}{subsection.B.2}{}}
+\citation{hidasi2016gru4rec}
+\citation{sun2019bert4rec}
+\citation{yuan2019nextitnet}
+\citation{kang2018sasrec}
+\citation{bao2023tallrec}
+\@writefile{lot}{\contentsline {table}{\numberline {B.1}{\ignorespaces Dataset statistics under the shared benchmark protocol.}}{19}{table.caption.16}\protected@file@percent }
+\newlabel{tab:dataset_stats}{{B.1}{19}{Dataset statistics under the shared benchmark protocol}{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Baselines}{19}{subsection.B.3}\protected@file@percent }
+\newlabel{app:baselines}{{B.3}{19}{Baselines}{subsection.B.3}{}}
+\citation{liao2024llara}
+\citation{kim2024allmrec}
+\citation{zhang2025collm}
+\citation{kim2025lost}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Implementation Details}{20}{subsection.B.4}\protected@file@percent }
+\newlabel{app:implementation}{{B.4}{20}{Implementation Details}{subsection.B.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Prompt Templates.}{20}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.5}Efficiency and Computational Cost Discussion}{20}{subsection.B.5}\protected@file@percent }
+\newlabel{app:efficiency}{{B.5}{20}{Efficiency and Computational Cost Discussion}{subsection.B.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {B.2}{\ignorespaces Compact Stage-I prompt templates for semantic asset construction. These prompts are used only to build offline semantic assets and semantic neighborhood graphs.}}{21}{table.caption.18}\protected@file@percent }
+\newlabel{tab:semantic_asset_prompt_template}{{B.2}{21}{Compact Stage-I prompt templates for semantic asset construction. These prompts are used only to build offline semantic assets and semantic neighborhood graphs}{table.caption.18}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {B.3}{\ignorespaces Compact Stage-II prompt templates for sequence injection. Projected item embeddings use \textcolor {itemembcolor}{[ItemEmb]}{}; outputs are read from \textcolor {useroutcolor}{[UserOut]}{} and \textcolor {itemoutcolor}{[ItemOut]}{}. The teacher-side user representation is used as the matching target, not as an input token. Placeholders are typeset as $\langle \cdot \rangle $ while keeping the original code field names.}}{21}{table.caption.18}\protected@file@percent }
+\newlabel{tab:si_prompt_template}{{B.3}{21}{Compact Stage-II prompt templates for sequence injection. Projected item embeddings use \tokitememb {}; outputs are read from \tokuserout {} and \tokitemout {}. The teacher-side user representation is used as the matching target, not as an input token. Placeholders are typeset as $\langle \cdot \rangle $ while keeping the original code field names}{table.caption.18}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {C}Additional Experimental Results}{21}{appendix.C}\protected@file@percent }
+\newlabel{app:extra_results}{{C}{21}{Additional Experimental Results}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Sequence Perturbation on Additional Datasets}{21}{subsection.C.1}\protected@file@percent }
+\newlabel{app:seq_perturb_scientific}{{C.1}{21}{Sequence Perturbation on Additional Datasets}{subsection.C.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Controlled SSHG Diagnosis on Movies, Scientific, and Electronics}{21}{subsection.C.2}\protected@file@percent }
+\newlabel{app:rq4_more_datasets}{{C.2}{21}{Controlled SSHG Diagnosis on Movies, Scientific, and Electronics}{subsection.C.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {D}Limitations}{21}{appendix.D}\protected@file@percent }
+\newlabel{app:limitations}{{D}{21}{Limitations}{appendix.D}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {E}Broader Impacts and Assets}{21}{appendix.E}\protected@file@percent }
+\newlabel{app:broader_assets}{{E}{21}{Broader Impacts and Assets}{appendix.E}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {C.1}{\ignorespaces Sequence perturbation on Movies, Scientific, and Electronics. Top row: NDCG@10; bottom row: HR@10.}}{22}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:seq_perturb_more_appendix}{{C.1}{22}{Sequence perturbation on Movies, Scientific, and Electronics. Top row: NDCG@10; bottom row: HR@10}{figure.caption.19}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {C.2}{\ignorespaces Controlled SSHG diagnosis on three additional datasets across neighborhood sizes. Top row: semantic alignment; bottom row: structure transfer.}}{22}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:rq4_more_datasets_appendix}{{C.2}{22}{Controlled SSHG diagnosis on three additional datasets across neighborhood sizes. Top row: semantic alignment; bottom row: structure transfer}{figure.caption.20}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {F}Future Work}{23}{appendix.F}\protected@file@percent }
+\newlabel{app:future_work}{{F}{23}{Future Work}{appendix.F}{}}
+\providecommand\NAT@force@numbers{}\NAT@force@numbers
+\gdef \@abspage@last{30}

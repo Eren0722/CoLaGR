@@ -1,0 +1,22 @@
+{
+  "dataset": "Industrial_and_Scientific",
+  "sample_size": 2000,
+  "viz_seed": 42,
+  "viz_users": 1200,
+  "neighbor_k": 30,
+  "rbo_p": 0.9,
+  "models": {
+    "Pure-SI": {
+      "save_dir": "scientific_pure_sasrec_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Industrial_and_Scientific/SASRec_saving.epoch=200.lr=0.001.layer=2.head=1.hidden=64.maxlen=128.pth",
+      "teacher_kind": "raw",
+      "best_epoch": 3
+    },
+    "EchoRec": {
+      "save_dir": "scientific_si_5090",
+      "teacher_ckpt": "./SeqRec/sasrec/Industrial_and_Scientific/scientific_sa_teacher/model_metric_best.pth",
+      "teacher_kind": "sacp",
+      "best_epoch": 10
+    }
+  }
+}
