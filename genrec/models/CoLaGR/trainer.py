@@ -11,9 +11,10 @@ from transformers.optimization import get_scheduler
 from genrec.evaluator import Evaluator
 from genrec.trainer import Trainer
 from genrec.utils import config_for_log, get_file_name, get_total_steps, log
+from genrec.models.CoLaGR.rl.latent_trainer import LatentRLTrainerMixin
 
 
-class CoLaGRTrainer(Trainer):
+class CoLaGRTrainer(LatentRLTrainerMixin, Trainer):
     def __init__(self, config, model, tokenizer):
         super().__init__(config, model, tokenizer)
         self.num_levels = tokenizer.n_digit
@@ -128,6 +129,8 @@ class CoLaGRTrainer(Trainer):
         return batch
 
     def fit(self, train_dataloader, val_dataloader):
+        if self._config_bool('use_latent_rl', False):
+            return self.fit_latent_rl(train_dataloader, val_dataloader)
         optimizer = AdamW(
             [param for param in self.model.parameters() if param.requires_grad],
             lr=self.config['lr'],

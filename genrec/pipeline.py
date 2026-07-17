@@ -77,6 +77,10 @@ class Pipeline:
             if checkpoint_path:
                 self.model.load_state_dict(torch.load(checkpoint_path, map_location=self.config['device']))
                 self.log(f'Loaded model checkpoint from {checkpoint_path}')
+            elif self.config.get('latent_rl_init_checkpoint'):
+                init_checkpoint_path = self.config['latent_rl_init_checkpoint']
+                self.model.load_state_dict(torch.load(init_checkpoint_path, map_location=self.config['device']))
+                self.log(f'Loaded latent-RL initialization checkpoint from {init_checkpoint_path}')
             elif self.config.get('init_checkpoint_path'):
                 init_checkpoint_path = self.config['init_checkpoint_path']
                 self.model.load_state_dict(torch.load(init_checkpoint_path, map_location=self.config['device']))
@@ -130,7 +134,11 @@ class Pipeline:
         )
 
         if eval_only:
-            if self.checkpoint_path is None and not self.config.get('init_checkpoint_path'):
+            if (
+                self.checkpoint_path is None
+                and not self.config.get('init_checkpoint_path')
+                and not self.config.get('latent_rl_init_checkpoint')
+            ):
                 raise ValueError(
                     'eval_only=True requires --checkpoint=<path> or '
                     '--init_checkpoint_path=<path>.'
