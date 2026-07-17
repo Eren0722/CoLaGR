@@ -79,6 +79,23 @@ detach_activation_in_fuse_loss: true
 init_checkpoint_path: null
 eval_only: false
 
+# Latent-RL post-training (R3-style latent exploration adapted to T5).
+# Stage-1 remains the default; start this stage from an explicit Stage-1
+# checkpoint via --init_checkpoint_path or --checkpoint.
+use_latent_rl: false
+latent_rl_init_checkpoint: null
+latent_rl_rollouts: 4
+latent_rl_noise_std: 0.10
+latent_rl_reward_copref_weight: 0.10
+latent_rl_clip_eps: 0.20
+latent_rl_kl_beta: 0.01
+latent_rl_lr: 0.0001
+latent_rl_weight_decay: 0.0
+latent_rl_epochs: 1
+latent_rl_update_epochs: 1
+latent_rl_warmup_steps: 0
+latent_rl_eval_interval: 1
+
 # CoRoute / Collaborative Latent Routing
 use_coroute: false
 num_coreason_routes: 4

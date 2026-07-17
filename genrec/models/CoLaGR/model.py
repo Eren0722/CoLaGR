@@ -59,6 +59,15 @@ class CoLaGR(AbstractModel):
             nn.Linear(config['d_model'], len(self.level_token_ids[level]))
             for level in range(self.num_levels)
         ])
+        # This adapter is zero-initialized so Stage-1 SFT and normal decoding
+        # are unchanged. It is the only module opened by latent-RL training.
+        self.latent_rl_adapter = nn.Sequential(
+            nn.LayerNorm(config['d_model']),
+            nn.Linear(config['d_model'], config['d_model'], bias=False),
+        )
+        nn.init.zeros_(self.latent_rl_adapter[-1].weight)
+        for parameter in self.latent_rl_adapter.parameters():
+            parameter.requires_grad = False
         self.fuse_gates = nn.Parameter(torch.full(
             (self.num_levels,),
             float(config.get('fuse_gate_init', -2.0)),
@@ -117,7 +126,13 @@ class CoLaGR(AbstractModel):
             incompatible = super().load_state_dict(prepared, strict=False, assign=assign)
         except TypeError:
             incompatible = super().load_state_dict(prepared, strict=False)
-        missing = list(incompatible.missing_keys)
+        # Older Stage-1 checkpoints predate the zero-initialized RL adapter.
+        # Treat those keys as optional so they load with the exact Stage-1
+        # behavior (the adapter starts at zero).
+        missing = [
+            key for key in incompatible.missing_keys
+            if not key.startswith('latent_rl_adapter.')
+        ]
         unexpected = list(incompatible.unexpected_keys)
         if strict and (missing or unexpected):
             messages = []
@@ -423,6 +438,87 @@ class CoLaGR(AbstractModel):
             return self.build_coreason_decoder_inputs(labels_sid)
         return self.build_plain_decoder_inputs(labels_sid)
 
+    def configure_latent_rl(self, trainable=True):
+        """Freeze the Stage-1 model and optionally open only the latent adapter."""
+        for parameter in self.parameters():
+            parameter.requires_grad = False
+        for parameter in self.latent_rl_adapter.parameters():
+            parameter.requires_grad = trainable
+
+    def _rl_decoder_inputs_embeds(self, labels_sid, latent_noise=None):
+        decoder_input_ids, decision_positions = self.build_decoder_inputs(labels_sid)
+        embeds = self.t5.shared(decoder_input_ids)
+        if latent_noise is None:
+            latent_noise = embeds.new_zeros(
+                labels_sid.shape[0], self.num_levels, embeds.shape[-1]
+            )
+        if latent_noise.shape != (labels_sid.shape[0], self.num_levels, embeds.shape[-1]):
+            raise ValueError(
+                'latent_noise must have shape [batch, num_levels, d_model], '
+                f'got {tuple(latent_noise.shape)}'
+            )
+        positions = decision_positions.view(1, -1, 1).expand(labels_sid.shape[0], -1, embeds.shape[-1])
+        anchor_embeds = embeds.gather(1, positions)
+        anchor_embeds = anchor_embeds + self.latent_rl_adapter(anchor_embeds) + latent_noise
+        embeds = embeds.clone()
+        embeds.scatter_(1, positions, anchor_embeds)
+        return embeds, decision_positions
+
+    def forward_latent_rl(self, batch, latent_noise=None):
+        """Teacher-forced policy statistics for latent-noise RL.
+
+        Noise is injected only at CoReason decoder anchors. The returned
+        per-level log probabilities are the policy log-probability of the
+        observed SID, which keeps the RL stage compatible with T5 and PSID.
+        """
+        labels_sid = batch['labels'][:, :self.num_levels]
+        decoder_embeds, decision_positions = self._rl_decoder_inputs_embeds(
+            labels_sid, latent_noise
+        )
+        outputs = self.t5(
+            input_ids=batch['input_ids'],
+            attention_mask=batch['attention_mask'],
+            decoder_inputs_embeds=decoder_embeds,
+            output_hidden_states=True,
+            return_dict=True,
+        )
+        hidden = outputs.decoder_hidden_states[-1]
+        per_level_logprob, per_level_ce, per_level_pref = [], [], []
+        use_copref = self._config_bool('use_copref_loss', True) and 'coprefs' in batch
+        for level in range(self.num_levels):
+            z_level = hidden[:, decision_positions[level], :]
+            pref_hidden = self._copref_hidden(hidden, decision_positions, level)
+            lm_logits = self._level_lm_logits(z_level, level)
+            prior_logits = self.copref_heads[level](pref_hidden)
+            target_local = self._target_local_indices(labels_sid, level)
+            log_probs = F.log_softmax(lm_logits, dim=-1)
+            token_logprob = log_probs.gather(1, target_local.unsqueeze(1)).squeeze(1)
+            per_level_logprob.append(token_logprob)
+            per_level_ce.append(-token_logprob)
+            if use_copref:
+                copref = batch['coprefs'][level].to(prior_logits.device, prior_logits.dtype)
+                copref = copref.clamp_min(0)
+                copref = copref / copref.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+                per_level_pref.append(
+                    F.kl_div(
+                        F.log_softmax(prior_logits, dim=-1),
+                        copref,
+                        reduction='none',
+                    ).sum(dim=-1)
+                )
+            else:
+                per_level_pref.append(token_logprob.new_zeros(token_logprob.shape))
+
+        logprob = torch.stack(per_level_logprob, dim=-1)
+        ce = torch.stack(per_level_ce, dim=-1).mean(dim=-1)
+        pref = torch.stack(per_level_pref, dim=-1).mean(dim=-1)
+        return SimpleNamespace(
+            per_level_logprob=logprob,
+            logprob=logprob.sum(dim=-1),
+            loss_gen_per_sample=ce,
+            loss_pref_per_sample=pref,
+        )
+
     def _copref_level_weights(self, device, dtype):
         raw_weights = self.config.get('copref_level_weights', [1.0] * self.num_levels)
         if isinstance(raw_weights, str):
@@ -552,6 +648,8 @@ class CoLaGR(AbstractModel):
         )
 
     def forward(self, batch):
+        if '_latent_rl_noise' in batch:
+            return self.forward_latent_rl(batch, batch['_latent_rl_noise'])
         labels = batch['labels']
         labels_sid = labels[:, :self.num_levels]
         if self.use_coroute:
