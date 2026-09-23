@@ -350,5 +350,4 @@ def save_eval(model, dataset, args):
     with open(f'./../data_{args.dataset}/Results.txt', 'w') as f:
         sys.stdout = f
         print('test (NDCG@10: %.4f, HR@10: %.4f)' % (t_test[0], t_test[1]))
-        sys.stdout = sys.__stdout__ 
-        
+        sys.stdout = sys.__stdout__

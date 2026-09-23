@@ -56,7 +56,8 @@ def get_local_time():
 
 
 def get_command_line_args_str():
-    full_args = '_'.join(sys.argv).replace('/', '|')
+    full_args = '_'.join([os.path.basename(sys.argv[0]), *sys.argv[1:]])
+    full_args = re.sub(r'[^A-Za-z0-9_.-]+', '_', full_args)
     # Truncate to avoid "file name too long" errors, keep max 80 chars
     if len(full_args) > 80:
         return full_args[:77] + '...'
@@ -291,7 +292,7 @@ def convert_config_dict(config: dict) -> dict:
                 new_v, (str, int, float, bool, list, dict, tuple)
             ):
                 new_v = v
-        except (NameError, SyntaxError, TypeError):
+        except (NameError, SyntaxError, TypeError, ValueError):
             if isinstance(v, str) and v.lower() in ['true', 'false']:
                 new_v = (v.lower() == 'true')
             else:

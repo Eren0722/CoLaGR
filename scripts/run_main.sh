@@ -4,7 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 STAGE="${1:?Choose prepare, train, beam, or coleaf}"
-CATEGORY="${CATEGORY:?Set CATEGORY to one of the three benchmark domains}"
+CATEGORY="${CATEGORY:-Industrial_and_Scientific}"
+[[ "$CATEGORY" == Industrial_and_Scientific ]] || { echo 'Only Industrial_and_Scientific is packaged.' >&2; exit 2; }
 PYTHON="${PYTHON:-python}"
 DATASET="${DATASET:-AmazonReviews2023}"
 SEED="${SEED:-2024}"
@@ -21,12 +22,12 @@ mkdir -p "$CANDIDATES"
 case "$STAGE" in
   prepare)
     : "${TEACHER_CHECKPOINT:?Set TEACHER_CHECKPOINT to a trained SASRec .pth file}"
-    "$PYTHON" colagr/copref/export_sid_artifacts_latte.py \
+    "$PYTHON" colagr/copref/export_sid_artifacts.py \
       --model=CoLaGR --dataset="$DATASET" --category="$CATEGORY" --vq_method=rqkmeans --output_dir="$SID"
-    "$PYTHON" colagr/teacher/export_topm_sasrec_latte.py \
+    "$PYTHON" colagr/teacher/export_preferences.py \
       --dataset="$DATASET" --category="$CATEGORY" --checkpoint="$TEACHER_CHECKPOINT" \
       --output_dir="$TEACHER" --top_m="$TOP_M" --splits=train,val,test --device="cuda:$GPU"
-    CUDA_VISIBLE_DEVICES="$GPU" "$PYTHON" colagr/copref/build_copref_latte.py \
+    CUDA_VISIBLE_DEVICES="$GPU" "$PYTHON" colagr/copref/build_copref.py \
       --artifacts_dir="$SID" --teacher_dir="$TEACHER" --output_dir="$COPREF" --device=cuda
     ;;
   train)

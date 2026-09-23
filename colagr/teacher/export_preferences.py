@@ -16,16 +16,16 @@ def parse_bool(value):
     return str(value).lower() in {'1', 'true', 'yes', 'y'}
 
 
-def import_llmsrec_sasrec(llmsrec_root):
-    if llmsrec_root is None:
-        model_path = os.path.join(os.path.dirname(__file__), 'llmsrec_sasrec', 'model.py')
+def import_sasrec_model(model_root):
+    if model_root is None:
+        model_path = os.path.join(os.path.dirname(__file__), 'sasrec', 'model.py')
     else:
-        direct_path = os.path.join(llmsrec_root, 'model.py')
-        nested_path = os.path.join(llmsrec_root, 'SeqRec', 'sasrec', 'model.py')
+        direct_path = os.path.join(model_root, 'model.py')
+        nested_path = os.path.join(model_root, 'SeqRec', 'sasrec', 'model.py')
         model_path = direct_path if os.path.exists(direct_path) else nested_path
     if not os.path.exists(model_path):
         raise FileNotFoundError(f'LLM-SRec SASRec model.py not found: {model_path}')
-    spec = importlib.util.spec_from_file_location('llmsrec_sasrec_model', model_path)
+    spec = importlib.util.spec_from_file_location('colagr_sasrec_model', model_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.SASRec
@@ -178,7 +178,7 @@ def main():
     parser.add_argument('--top_m', type=int, default=200)
     parser.add_argument('--splits', default='train,val,test')
     parser.add_argument('--limit_samples', type=int, default=None)
-    parser.add_argument('--llmsrec_root', default=None)
+    parser.add_argument('--model_root', default=None)
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--score_batch_size', type=int, default=8192)
     parser.add_argument('--export_batch_size', type=int, default=512)
@@ -212,8 +212,8 @@ def main():
     _, dataset, split_datasets, tokenizer = load_dataset_and_tokenizer('CoLaGR', args.dataset, overrides)
     ensure_dir(args.output_dir)
 
-    llmsrec_root = os.path.abspath(args.llmsrec_root) if args.llmsrec_root is not None else None
-    SASRec = import_llmsrec_sasrec(llmsrec_root)
+    model_root = os.path.abspath(args.model_root) if args.model_root is not None else None
+    SASRec = import_sasrec_model(model_root)
     device = normalize_device(str(args.device))
     usernum = dataset.n_users - 1
     itemnum = dataset.n_items - 1

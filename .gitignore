@@ -15,6 +15,12 @@ tensorboard/
 results/
 *.pt
 *.pth
+!release/industrial/sid/level_token_ids.pt
+!release/industrial/checkpoint.pth
+!release/musical/sid/level_token_ids.pt
+!release/musical/checkpoint.pth
+!release/video/sid/level_token_ids.pt
+!release/video/checkpoint.pth
 *.safetensors
 *.bin
 *.pkl

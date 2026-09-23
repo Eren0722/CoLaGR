@@ -70,7 +70,7 @@ def build_records_batch_fast(records, item_to_idx, sid_tokens, sid_locals, level
     rows = torch.arange(batch_size, device=device).unsqueeze(1).expand(batch_size, top_m)
     for level, tokens in enumerate(level_token_ids):
         width = len(tokens)
-        # Global mainline: marginalise the user's teacher preference at each
+        # Marginalise the user's teacher preference at each
         # SID level. Prefixes are used only by the decoder's legality mask.
         prefix_weights = p_teacher * valid_mask.float()
         q_prefix = torch.zeros(batch_size, width, dtype=torch.float, device=device)

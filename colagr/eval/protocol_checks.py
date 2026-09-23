@@ -11,8 +11,8 @@ if str(REPO_ROOT) not in sys.path:
 from genrec.models.CoLaGR.model import CoLaGR
 from genrec.models.CoLaGR.trainer import CoLaGRTrainer
 from colagr.common import split_examples
-from colagr.copref import build_copref_latte
-from colagr.teacher import export_topm_sasrec_latte
+from colagr.copref import build_copref
+from colagr.teacher import export_preferences
 
 
 class DummyTokenizer:
@@ -39,7 +39,7 @@ def check(condition, message):
 
 
 def check_copref_global_marginal():
-    source = inspect.getsource(build_copref_latte.build_records_batch_fast)
+    source = inspect.getsource(build_copref.build_records_batch_fast)
     check('prefix_weights = p_teacher * valid_mask.float()' in source, 'CoPref marginalises all valid Top-M teacher items')
     check('target_sid_tokens[:, None, :level]' not in source, 'CoPref does not condition targets on the gold prefix')
 
@@ -51,7 +51,7 @@ def check_topm_history_protocol():
     check(examples[1]['history_items'] == ['a', 'b'], 'train sample 1 history is before target only')
     check(examples[1]['target_item'] == 'c', 'train sample 1 target follows history')
 
-    source = inspect.getsource(export_topm_sasrec_latte.main)
+    source = inspect.getsource(export_preferences.main)
     check('top_items.append' not in source, 'teacher exporter does not forcibly append target to top_items')
     check('insert' not in source, 'teacher exporter does not forcibly insert target into top-M')
 
@@ -104,7 +104,7 @@ def check_trainer_eval_protocol():
 
 
 def main():
-    check((REPO_ROOT / 'colagr' / 'teacher' / 'llmsrec_sasrec' / 'model.py').exists(), 'vendored SASRec exists')
+    check((REPO_ROOT / 'colagr' / 'teacher' / 'sasrec' / 'model.py').exists(), 'SASRec teacher exists')
     check_copref_global_marginal()
     check_topm_history_protocol()
     check_teacher_free_generation()

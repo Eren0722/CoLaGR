@@ -515,7 +515,7 @@ def main():
                 '--record_output requires exactly one history length, memory_k, and alpha.'
             )
         torch.save(user_records, record_output)
-    print('COLLAB_MEMORY_FUSION=' + json.dumps(output, sort_keys=True))
+    print('COLAGR_RESULT=' + json.dumps(output, sort_keys=True))
 
 
 if __name__ == '__main__':

@@ -1,71 +1,61 @@
-<p align="center"><img src="assets/mark.svg" width="76" alt="CoLaGR mark"></p>
+<p align="center"><img src="assets/mark.svg" width="74" alt="CoLaGR symbol"></p>
 
 <h1 align="center">CoLaGR</h1>
 <p align="center"><strong>Collaborative Latent Reasoning for Generative Recommendation</strong></p>
-<p align="center"><a href="#quick-start">Quick start</a> · <a href="#reproduce-the-main-experiment">Main experiment</a> · <a href="#repository-map">Code map</a> · <a href="#acknowledgments">Acknowledgments</a></p>
+<p align="center">
+  <img src="https://img.shields.io/badge/reproduction-3%20domains-193b70" alt="Three domains">
+  <img src="https://img.shields.io/badge/artifact-3%20validated%20checkpoints-118577" alt="Three validated checkpoints">
+  <img src="https://img.shields.io/badge/evaluation-fixed%2050--item%20beam-b5822b" alt="Fixed beam">
+</p>
 
-<p align="center"><img src="assets/architecture.png" width="880" alt="CoLaGR architecture"></p>
+<p align="center"><a href="#the-problem">The problem</a> | <a href="#one-command-reproduction">Reproduce</a> | <a href="#what-is-included">Files</a> | <a href="#acknowledgments">Credit</a></p>
 
-CoLaGR turns a frozen sequential teacher's item-level preferences into level-wise supervision for a Semantic-ID generator. Its CoPref module guides latent decision states; CoLeaf calibrates the ranking of complete items on a fixed beam. This repository contains the **main experimental pipeline only**. It does not include datasets, pretrained weights, private experiment logs, or external project trees.
+## The problem
 
-## Quick start
+Semantic-ID generation makes a decision at each tree level, but an action label alone need not identify a user's collaborative preference. Even after a complete item is generated, its path score need not agree with collaborative evidence. CoLaGR addresses these two interfaces with **CoPref** (pre-action preference supervision) and **CoLeaf** (complete-item calibration).
+
+<p align="center"><img src="assets/problem.png" width="920" alt="Preference conflicts at intermediate decisions and complete-item ranking"></p>
+
+<p align="center"><img src="assets/architecture.png" width="920" alt="CoLaGR architecture"></p>
+
+## One-command reproduction
+
+This release reproduces the **CoLaGR main-table row on all three domains**. It ships three validation-selected CoLaGR-G checkpoints (seed 2024), their matching Semantic-ID structures, and code for scored beam generation and validation-selected CoLeaf calibration. It does not package the four diagnostic RQs.
+
+Prerequisites: Linux, a CUDA GPU, Python 3.12, and `aria2c`. Install a CUDA-compatible PyTorch build for your driver before installing this project. The benchmark is downloaded from its original publisher rather than redistributed here.
 
 ```bash
-git clone <repository-url> CoLaGR
-cd CoLaGR
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .
+bash scripts/reproduce.sh
 ```
 
-The examples below use the public Amazon Reviews 2023 benchmark. Download each 5-core domain with `bash scripts/download_amazon2023_benchmark_aria2.sh <domain>` or supply the same dataset through the Hugging Face loader. Install a PyTorch build compatible with your CUDA driver before training. Generated data and checkpoints stay under ignored local directories.
+The command downloads each official 5-core leave-one-out benchmark if needed, verifies its processed split and item mapping, exports **validation and test** candidates from each checkpoint with cumulative autoregressive log-probabilities, selects `alpha` independently on validation NDCG@10, and checks all four test metrics. It writes the paper-column-order summary to `results/main_table.csv`. Use `bash scripts/reproduce.sh musical` for one domain, `GPU=1` to select another GPU, or `BATCH_SIZE=128` for the paper's evaluation batch size when memory allows. The default batch size 32 changes only inference throughput. Generated data and logs remain in ignored `cache/` and `results/` directories.
 
-## Reproduce the main experiment
+| CoLaGR | R@5 | R@10 | N@5 | N@10 |
+|:--|--:|--:|--:|--:|
+| Musical Instruments | **0.0472** | **0.0694** | **0.0324** | **0.0395** |
+| Industrial and Scientific | **0.0374** | **0.0536** | **0.0257** | **0.0309** |
+| Video Games | **0.0740** | **0.1073** | **0.0510** | **0.0618** |
 
-Each domain follows the same four stages: prepare Semantic IDs and teacher preferences, train CoLaGR-G, export a scored beam, and select/evaluate CoLeaf on validation/test. The teacher and generator must use the **same user/item mapping**. For an exact run, use the paper's 150-epoch, seed-2024 configuration and validation-selected preference weight.
+The Industrial, Musical, and Video test sets contain 50,985, 57,439, and 94,762 examples, respectively. CoLeaf uses a fixed 50-item beam, history length 10, and memory support 50. Validation selects `alpha=3.0`, `1.5`, and `3.0` for Industrial, Musical, and Video; calibration cannot alter candidate membership. `scripts/check_bundle.py` fails if any main metric differs by more than `5e-5`. The log-probability and candidate order are stored together in each generated beam record.
 
-```bash
-export CATEGORY=Industrial_and_Scientific  # or Musical_Instruments / Video_Games
-export LAMBDA_PREF=1.75                 # Musical: 1.0; Video Games: 0.75
-export TEACHER_CHECKPOINT=/path/to/sasrec_teacher.pth
-
-bash scripts/run_main.sh prepare
-bash scripts/run_main.sh train
-export GENERATOR_CHECKPOINT=/path/to/validated_colagr_checkpoint.pth
-bash scripts/run_main.sh beam
-bash scripts/run_main.sh coleaf
-```
-
-`prepare` exports the SID map, teacher top-M preferences, and Global CoPref tensors. To train the frozen SASRec teacher from scratch on the same mapping, first export its sequences and run the included trainer:
-
-```bash
-python colagr/teacher/export_latte_sasrec_data.py --category="$CATEGORY"
-python colagr/teacher/llmsrec_sasrec/main.py --dataset="$CATEGORY" --device=0
-```
-
-The teacher checkpoint is saved below `colagr/teacher/llmsrec_sasrec/$CATEGORY/`. Set `TEACHER_CHECKPOINT` to that file before `prepare`. The generator writes a validation-selected `.pth` below `ckpt/`; set `GENERATOR_CHECKPOINT` to it before `beam`. `coleaf` selects the calibration weight using validation **only**, then evaluates test candidates without changing the beam. The scored candidate export uses cumulative autoregressive log-probabilities, not generator rank.
-
-| Domain | CoPref weight used in the main run |
-|:--|--:|
-| Industrial & Scientific | 1.75 |
-| Musical Instruments | 1.00 |
-| Video Games | 0.75 |
-
-The main scripts expose `DATASET`, `PYTHON`, `SEED`, `EPOCHS`, `GPU`, `TOP_M`, and `ALPHA_GRID` as environment variables. For the exact paper protocol and dataset split, see the manuscript and the arguments in `scripts/run_main.sh`. Run identifiers and artifact paths are deliberately local; no hosted checkpoint is required to inspect the implementation.
-
-Run `python -m colagr.eval.protocol_checks` to check teacher/target separation and fixed evaluation behavior before launching a long training run.
-
-## Repository map
+## What is included
 
 | Path | Purpose |
 |:--|:--|
-| `genrec/models/CoLaGR/` | Generator, CoPref heads, SID tokenizer, configuration |
-| `colagr/teacher/` | Frozen SASRec teacher and aligned preference export |
-| `colagr/copref/` | SID artifact and Global CoPref construction |
-| `colagr/eval/` | Scored-beam export and fixed-beam CoLeaf calibration |
-| `scripts/run_main.sh` | Four-stage main experiment |
-| `assets/architecture.png` | Architecture figure |
+| `release/{industrial,musical,video}/checkpoint.pth` | Three seed-2024 generator checkpoints |
+| `release/{industrial,musical,video}/sid/` | Matching level token IDs and valid-prefix tries |
+| `release/{industrial,musical,video}/processed_sid.sem_ids` | Matching collision-resolved Semantic IDs |
+| `scripts/reproduce.sh` | One-command, three-domain main-row reproduction |
+| `genrec/models/CoLaGR/` | Generator, pre-action states, and CoPref heads |
+| `colagr/eval/` | Scored-beam export and CoLeaf evaluation |
+| `colagr/copref/`, `colagr/teacher/` | Training-side preference construction |
+| `assets/` | Problem illustration and architecture figure |
+
+The processed Amazon benchmark contains user histories and product metadata, so it is **not** mirrored in this repository. It is obtained from the [original dataset provider](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023); the provided hashes guard against a silently changed split. The training-side code remains inspectable, but this artifact is scoped to reproducing the main results from released checkpoints, not retraining 150 epochs.
 
 ## Acknowledgments
 
-We thank the authors of [Latte](https://github.com/hyp1231/Latte) for releasing their generative recommendation framework. CoLaGR builds on and adapts that framework's data pipeline and generator infrastructure. Semantic-ID construction also builds on the open-source collision-resolution implementation of PSID; its provenance is retained in the tokenizer comments. We do not redistribute either external project's repository as a subproject. The included `LICENSE` preserves the upstream license notice.
+The data pipeline and generator infrastructure adapt the open-source [Latte](https://github.com/hyp1231/Latte) code. We thank its authors for making their implementation available. Semantic-ID collision resolution follows the released PSID implementation. The original repositories are not embedded here; their provenance and license notice are retained in source and `LICENSE`.

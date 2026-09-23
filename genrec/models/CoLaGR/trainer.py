@@ -28,7 +28,10 @@ class CoLaGRTrainer(Trainer):
         load_eval_copref_diagnostics = bool(config.get('load_eval_copref_diagnostics', False))
         # Do not load or index the large teacher artifact for ablations that do
         # not consume it.  This keeps Base genuinely free of CoPref work.
-        self.train_copref_enabled = self._config_bool('use_copref_loss', True)
+        self.train_copref_enabled = (
+            not self._config_bool('eval_only', False)
+            and self._config_bool('use_copref_loss', True)
+        )
         self.copref_by_split = {
             'train': self._load_copref(config.get('copref_train_path'))
             if self.train_copref_enabled else None,
