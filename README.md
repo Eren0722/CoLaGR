@@ -1,8 +1,10 @@
-<p align="center"><img src="assets/architecture.png" width="880" alt="CoLaGR architecture"></p>
+<p align="center"><img src="assets/mark.svg" width="76" alt="CoLaGR mark"></p>
 
 <h1 align="center">CoLaGR</h1>
 <p align="center"><strong>Collaborative Latent Reasoning for Generative Recommendation</strong></p>
 <p align="center"><a href="#quick-start">Quick start</a> · <a href="#reproduce-the-main-experiment">Main experiment</a> · <a href="#repository-map">Code map</a> · <a href="#acknowledgments">Acknowledgments</a></p>
+
+<p align="center"><img src="assets/architecture.png" width="880" alt="CoLaGR architecture"></p>
 
 CoLaGR turns a frozen sequential teacher's item-level preferences into level-wise supervision for a Semantic-ID generator. Its CoPref module guides latent decision states; CoLeaf calibrates the ranking of complete items on a fixed beam. This repository contains the **main experimental pipeline only**. It does not include datasets, pretrained weights, private experiment logs, or external project trees.
 
