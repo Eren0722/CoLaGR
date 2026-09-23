@@ -16,7 +16,7 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-The examples below use the public Amazon Reviews 2023 benchmark. Download the three 5-core domains with `bash scripts/download_amazon2023_benchmark_aria2.sh` or supply the same dataset through the Hugging Face loader. A CUDA GPU is recommended for training. Generated data and checkpoints stay under ignored local directories.
+The examples below use the public Amazon Reviews 2023 benchmark. Download each 5-core domain with `bash scripts/download_amazon2023_benchmark_aria2.sh <domain>` or supply the same dataset through the Hugging Face loader. Install a PyTorch build compatible with your CUDA driver before training. Generated data and checkpoints stay under ignored local directories.
 
 ## Reproduce the main experiment
 
@@ -50,6 +50,8 @@ The teacher checkpoint is saved below `colagr/teacher/llmsrec_sasrec/$CATEGORY/`
 | Video Games | 0.75 |
 
 The main scripts expose `DATASET`, `PYTHON`, `SEED`, `EPOCHS`, `GPU`, `TOP_M`, and `ALPHA_GRID` as environment variables. For the exact paper protocol and dataset split, see the manuscript and the arguments in `scripts/run_main.sh`. Run identifiers and artifact paths are deliberately local; no hosted checkpoint is required to inspect the implementation.
+
+Run `python -m colagr.eval.protocol_checks` to check teacher/target separation and fixed evaluation behavior before launching a long training run.
 
 ## Repository map
 
